@@ -13,13 +13,13 @@ namespace WhereAreYouGoing
         public ToggleNode DrawOnWorld { get; set; } = new ToggleNode(true);
         public ToggleNode DrawOnMap { get; set; } = new ToggleNode(true);
         public ColorNode AttackPathColor { get; set; } = new ColorNode(Color.Red);
-        public ToggleNode ShowWhiteMonsterPath { get; set; } = new ToggleNode(false);
+        public ToggleNode ShowWhiteMonsterPath { get; set; } = new ToggleNode(true);
         public ColorNode WhiteMonsterPathColor { get; set; } = new ColorNode(Color.White);
-        public ToggleNode ShowMagicMonsterPath { get; set; } = new ToggleNode(false);
+        public ToggleNode ShowMagicMonsterPath { get; set; } = new ToggleNode(true);
         public ColorNode MagicMonsterPathColor { get; set; } = new ColorNode(Color.SkyBlue);
-        public ToggleNode ShowRareMonsterPath { get; set; } = new ToggleNode(false);
+        public ToggleNode ShowRareMonsterPath { get; set; } = new ToggleNode(true);
         public ColorNode RareMonsterPathColor { get; set; } = new ColorNode(Color.Yellow);
-        public ToggleNode ShowUniqueMonsterPath { get; set; } = new ToggleNode(false);
+        public ToggleNode ShowUniqueMonsterPath { get; set; } = new ToggleNode(true);
         public ColorNode UniqueMonsterPathColor { get; set; } = new ColorNode(Color.Gold);
         public ToggleNode Enable { get; set; } = new ToggleNode(true);
     }
