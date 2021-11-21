@@ -58,6 +58,10 @@
       <HintPath>..\..\..\GameOffsets.dll</HintPath>
       <Private>False</Private>
     </Reference>
+    <Reference Include="ImGui.NET">
+      <HintPath>..\..\..\ImGui.NET.dll</HintPath>
+      <Private>False</Private>
+    </Reference>
     <Reference Include="JM.LinqFaster, Version=0.1.0.0, Culture=neutral, PublicKeyToken=null">
       <HintPath>..\..\..\packages\LinqFaster.1.0.0\lib\net461\JM.LinqFaster.dll</HintPath>
       <Private>False</Private>
@@ -73,9 +77,11 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
+    <Reference Include="System.Windows.Forms" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Helper.cs" />
+    <Compile Include="ImGuiExtension.cs" />
     <Compile Include="WhereAreYouGoing.cs" />
     <Compile Include="WhereAreYouGoingSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

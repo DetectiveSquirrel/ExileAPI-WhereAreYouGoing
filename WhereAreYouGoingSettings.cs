@@ -7,20 +7,181 @@ namespace WhereAreYouGoing
 {
     public class WhereAreYouGoingSettings : ISettings
     {
-        [Menu("Draw Monster")]
-        public ToggleNode DrawMonsters { get; set; } = new ToggleNode(true);
         public ToggleNode MultiThreading { get; set; } = new ToggleNode(false);
-        public ToggleNode DrawOnWorld { get; set; } = new ToggleNode(true);
-        public ToggleNode DrawOnMap { get; set; } = new ToggleNode(true);
-        public ColorNode AttackPathColor { get; set; } = new ColorNode(Color.Red);
-        public ToggleNode ShowWhiteMonsterPath { get; set; } = new ToggleNode(true);
-        public ColorNode WhiteMonsterPathColor { get; set; } = new ColorNode(Color.White);
-        public ToggleNode ShowMagicMonsterPath { get; set; } = new ToggleNode(true);
-        public ColorNode MagicMonsterPathColor { get; set; } = new ColorNode(Color.SkyBlue);
-        public ToggleNode ShowRareMonsterPath { get; set; } = new ToggleNode(true);
-        public ColorNode RareMonsterPathColor { get; set; } = new ColorNode(Color.Yellow);
-        public ToggleNode ShowUniqueMonsterPath { get; set; } = new ToggleNode(true);
-        public ColorNode UniqueMonsterPathColor { get; set; } = new ColorNode(Color.Gold);
         public ToggleNode Enable { get; set; } = new ToggleNode(true);
+        public WAYGConfig NormalMonster { get; set; } = new WAYGConfig()
+        {
+            Enable = true,
+            Colors = new WAYGConfig.WAYGColors
+            {
+                MapColor = new Color(255, 255, 255, 94),
+                MapAttackColor = new Color(255, 0, 0, 255),
+                WorldColor = new Color(255, 255, 255, 94),
+                WorldAttackColor = new Color(255, 0, 0, 255),
+            },
+            World = new WAYGConfig.WAYGWorld
+            {
+                Enable = true,
+                DrawAttack = false,
+                DrawAttackEndPoint = true,
+                DrawDestinationEndPoint = false,
+                DrawLine = false,
+                AlwaysRenderCircle = true,
+                RenderCircleThickness = 3,
+                LineThickness = 5
+            },
+            Map = new WAYGConfig.WAYGMap
+            {
+                Enable = false,
+                DrawAttack = true,
+                DrawDestination = true,
+                LineThickness = 1
+            }
+        };
+        public WAYGConfig MagicMonster { get; set; } = new WAYGConfig()
+        {
+            Enable = true,
+            Colors = new WAYGConfig.WAYGColors
+            {
+                MapColor = new Color(43, 120, 255, 176),
+                MapAttackColor = new Color(255, 0, 0, 144),
+                WorldColor = new Color(43, 120, 255, 176),
+                WorldAttackColor = new Color(255, 0, 0, 144),
+            },
+            World = new WAYGConfig.WAYGWorld
+            {
+                Enable = true,
+                DrawAttack = false,
+                DrawAttackEndPoint = true,
+                DrawDestinationEndPoint = false,
+                DrawLine = false,
+                AlwaysRenderCircle = true,
+                RenderCircleThickness = 3,
+                LineThickness = 5
+            },
+            Map = new WAYGConfig.WAYGMap
+            {
+                Enable = false,
+                DrawAttack = true,
+                DrawDestination = true,
+                LineThickness = 1
+            }
+        };
+        public WAYGConfig RareMonster { get; set; } = new WAYGConfig()
+        {
+            Enable = true,
+            Colors = new WAYGConfig.WAYGColors
+            {
+                MapColor = new Color(225, 210, 19, 255),
+                MapAttackColor = new Color(255, 0, 0, 140),
+                WorldColor = new Color(225, 210, 19, 255),
+                WorldAttackColor = new Color(255, 0, 0, 140),
+            },
+            World = new WAYGConfig.WAYGWorld
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawAttackEndPoint = true,
+                DrawDestinationEndPoint = true,
+                DrawLine = true,
+                AlwaysRenderCircle = true,
+                RenderCircleThickness = 5,
+                LineThickness = 5
+            },
+            Map = new WAYGConfig.WAYGMap
+            {
+                Enable = false,
+                DrawAttack = true,
+                DrawDestination = true,
+                LineThickness = 5
+            }
+        };
+        public WAYGConfig UniqueMonster { get; set; } = new WAYGConfig()
+        {
+            Enable = true,
+            Colors = new WAYGConfig.WAYGColors
+            {
+                MapColor = new Color(226, 122, 33, 255),
+                MapAttackColor = new Color(255, 0, 0, 255),
+                WorldColor = new Color(226, 122, 33, 255),
+                WorldAttackColor = new Color(255, 0, 0, 255),
+            },
+            World = new WAYGConfig.WAYGWorld
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawAttackEndPoint = true,
+                DrawDestinationEndPoint = true,
+                DrawLine = true,
+                AlwaysRenderCircle = true,
+                RenderCircleThickness = 5,
+                LineThickness = 5
+            },
+            Map = new WAYGConfig.WAYGMap
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawDestination = true,
+                LineThickness = 3
+            }
+        };
+        public WAYGConfig Players { get; set; } = new WAYGConfig()
+        {
+            Enable = true,
+            Colors = new WAYGConfig.WAYGColors
+            {
+                MapColor = new Color(35, 194, 47, 193),
+                MapAttackColor = new Color(255, 0, 0, 255),
+                WorldColor = new Color(35, 194, 47, 193),
+                WorldAttackColor = new Color(255, 0, 0, 255),
+            },
+            World = new WAYGConfig.WAYGWorld
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawAttackEndPoint = true,
+                DrawDestinationEndPoint = true,
+                DrawLine = true,
+                AlwaysRenderCircle = true,
+                RenderCircleThickness = 3,
+                LineThickness = 6
+            },
+            Map = new WAYGConfig.WAYGMap
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawDestination = true,
+                LineThickness = 5
+            }
+        };
+        public WAYGConfig Minions { get; set; } = new WAYGConfig()
+        {
+            Enable = true,
+            Colors = new WAYGConfig.WAYGColors
+            {
+                MapColor = new Color(218, 73, 255, 255),
+                MapAttackColor = new Color(255, 73, 115, 121),
+                WorldColor = new Color(218, 73, 255, 255),
+                WorldAttackColor = new Color(255, 73, 115, 121),
+            },
+            World = new WAYGConfig.WAYGWorld
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawAttackEndPoint = true,
+                DrawDestinationEndPoint = true,
+                DrawLine = true,
+                AlwaysRenderCircle = true,
+                RenderCircleThickness = 5,
+                LineThickness = 5
+            },
+            Map = new WAYGConfig.WAYGMap
+            {
+                Enable = false,
+                DrawAttack = true,
+                DrawDestination = true,
+                LineThickness = 5
+            }
+        };
     }
 }

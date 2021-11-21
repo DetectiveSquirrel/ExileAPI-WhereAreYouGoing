@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using ExileCore;
-using ExileCore.PoEMemory;
 using ExileCore.PoEMemory.Components;
 using ExileCore.PoEMemory.MemoryObjects;
-using ExileCore.Shared;
 using ExileCore.Shared.Abstract;
 using ExileCore.Shared.Cache;
 using ExileCore.Shared.Enums;
-using ExileCore.Shared.Helpers;
 using GameOffsets.Native;
+using ImGuiNET;
 using JM.LinqFaster;
 using SharpDX;
 using Map = ExileCore.PoEMemory.Elements.Map;
@@ -68,6 +65,70 @@ namespace WhereAreYouGoing
             return true;
         }
 
+        public WAYGConfig SettingMenu(WAYGConfig setting, string prefix)
+        {
+            var settings = setting;
+            if (ImGui.CollapsingHeader($@"{prefix} Entities##{prefix}", ImGuiTreeNodeFlags.Framed | ImGuiTreeNodeFlags.DefaultOpen))
+            {
+                // Start Indent
+                ImGui.Indent();
+
+                settings.Enable = ImGuiExtension.Checkbox($@"{prefix}(s) Enabled", settings.Enable);
+                if (ImGui.TreeNode($@"Colors##{prefix}"))
+                {
+
+                    settings.Colors.MapColor = ImGuiExtension.ColorPicker("Map Color", settings.Colors.MapColor);
+                    settings.Colors.MapAttackColor = ImGuiExtension.ColorPicker("Map Attack Color", settings.Colors.MapAttackColor);
+                    settings.Colors.WorldColor = ImGuiExtension.ColorPicker("World Color", settings.Colors.WorldColor);
+                    settings.Colors.WorldAttackColor = ImGuiExtension.ColorPicker("World Attack Color", settings.Colors.WorldAttackColor);
+                    ImGui.Spacing();
+                    ImGui.TreePop();
+                }
+
+                if (ImGui.TreeNode($@"Map##{prefix}"))
+                {
+                    settings.Map.Enable = ImGuiExtension.Checkbox("Map Drawing Enabled", settings.Map.Enable);
+                    settings.Map.DrawAttack = ImGuiExtension.Checkbox("Draw Attacks", settings.Map.DrawAttack);
+                    settings.Map.DrawDestination = ImGuiExtension.Checkbox("Draw Destinations", settings.Map.DrawDestination);
+                    settings.Map.LineThickness = ImGuiExtension.IntDrag("Line Thickness", settings.Map.LineThickness, 1, 100, 0.1f);
+                    ImGui.Spacing();
+                    ImGui.TreePop();
+                }
+
+                if (ImGui.TreeNode($@"World##{prefix}"))
+                {
+                    settings.World.Enable = ImGuiExtension.Checkbox("World Drawing Enabled", settings.World.Enable);
+                    settings.World.DrawAttack = ImGuiExtension.Checkbox("World Attacks", settings.World.DrawAttack);
+                    settings.World.DrawAttackEndPoint = ImGuiExtension.Checkbox("World Attack Endpoint", settings.World.DrawAttackEndPoint);
+                    settings.World.DrawDestinationEndPoint = ImGuiExtension.Checkbox("World Destination Endpoint", settings.World.DrawDestinationEndPoint);
+                    settings.World.DrawLine = ImGuiExtension.Checkbox("Draw Line", settings.World.DrawLine);
+                    settings.World.AlwaysRenderCircle = ImGuiExtension.Checkbox("Always Render Entity Circle", settings.World.AlwaysRenderCircle);
+                    settings.World.RenderCircleThickness = ImGuiExtension.IntDrag("Entity Circle Thickness", settings.World.RenderCircleThickness, 1, 100, 0.1f);
+                    settings.World.LineThickness = ImGuiExtension.IntDrag("Line Thickness", settings.World.LineThickness, 1, 100, 0.1f);
+                    ImGui.Spacing();
+                    ImGui.TreePop();
+                }
+
+                // End Indent
+                ImGui.Unindent();
+            }
+
+            // Reapply new settings
+            return settings;
+        }
+
+        public override void DrawSettings()
+        {
+            base.DrawSettings();
+
+            Settings.Players = SettingMenu(Settings.Players, "Player");
+            Settings.Minions = SettingMenu(Settings.Minions, "All Minion");
+            Settings.NormalMonster = SettingMenu(Settings.NormalMonster, "Normal Monster");
+            Settings.MagicMonster = SettingMenu(Settings.MagicMonster, "Magic Monster");
+            Settings.RareMonster = SettingMenu(Settings.RareMonster, "Rare Monster");
+            Settings.UniqueMonster = SettingMenu(Settings.UniqueMonster, "Unique Monster");
+        }
+
         public override Job Tick()
         {
             if (Settings.MultiThreading)
@@ -101,7 +162,7 @@ namespace WhereAreYouGoing
         {
             if (!Settings.Enable.Value || !GameController.InGame) return;
 
-            if (ingameStateIngameUi.AtlasPanel.IsVisibleLocal || ingameStateIngameUi.DelveWindow.IsVisibleLocal ||
+            if (ingameStateIngameUi.Atlas.IsVisibleLocal || ingameStateIngameUi.DelveWindow.IsVisibleLocal ||
                 ingameStateIngameUi.TreePanel.IsVisibleLocal)
                 return;
 
@@ -125,42 +186,116 @@ namespace WhereAreYouGoing
                 if (icon == null) continue;
                 if (icon.Entity == null) continue;
 
-                if (icon.Entity.Type == EntityType.WorldItem)
-                    continue;
-
-                if (!Settings.DrawMonsters && icon.Entity.Type == EntityType.Monster)
-                    continue;
-
-                if (!icon.Show())
-                    continue;
-
                 var component = icon?.Entity?.GetComponent<Render>();
                 if (component == null) continue;
                 var iconZ = component.Pos.Z;
 
-                var shouldDraw = false;
-                var color = Color.White;
-                switch (icon.Rarity)
+                WAYGConfig drawSettings = new WAYGConfig();
+
+                switch (icon.Entity.Type)
                 {
-                    case MonsterRarity.White:
-                        color = Settings.WhiteMonsterPathColor;
-                        shouldDraw = icon.Entity.IsHostile && Settings.ShowWhiteMonsterPath;
+                    case EntityType.Error:
                         break;
-                    case MonsterRarity.Magic:
-                        color = Settings.MagicMonsterPathColor;
-                        shouldDraw = icon.Entity.IsHostile && Settings.ShowMagicMonsterPath;
+                    case EntityType.None:
                         break;
-                    case MonsterRarity.Rare:
-                        color = Settings.RareMonsterPathColor;
-                        shouldDraw = icon.Entity.IsHostile && Settings.ShowRareMonsterPath;
+                    case EntityType.ServerObject:
                         break;
-                    case MonsterRarity.Unique:
-                        color = Settings.UniqueMonsterPathColor;
-                        shouldDraw = icon.Entity.IsHostile && Settings.ShowUniqueMonsterPath;
+                    case EntityType.Effect:
+                        break;
+                    case EntityType.Light:
+                        break;
+                    case EntityType.Monster:
+                        switch (icon.Entity.IsHostile)
+                        {
+                            case true:
+                                switch (icon.Rarity)
+                                {
+                                    case MonsterRarity.White:
+                                        drawSettings = Settings.NormalMonster;
+                                        break;
+                                    case MonsterRarity.Magic:
+                                        drawSettings = Settings.MagicMonster;
+                                        break;
+                                    case MonsterRarity.Rare:
+                                        drawSettings = Settings.RareMonster;
+                                        break;
+                                    case MonsterRarity.Unique:
+                                        drawSettings = Settings.UniqueMonster;
+                                        break;
+                                }
+                                break;
+                            case false:
+                                drawSettings = Settings.Minions;
+                                break;
+                                
+                        }
+                        break;
+                    case EntityType.Chest:
+                        break;
+                    case EntityType.SmallChest:
+                        break;
+                    case EntityType.Npc:
+                        break;
+                    case EntityType.Shrine:
+                        break;
+                    case EntityType.AreaTransition:
+                        break;
+                    case EntityType.Portal:
+                        break;
+                    case EntityType.QuestObject:
+                        break;
+                    case EntityType.Stash:
+                        break;
+                    case EntityType.Waypoint:
+                        break;
+                    case EntityType.Player:
+                        drawSettings = Settings.Players;
+                        break;
+                    case EntityType.Pet:
+                        break;
+                    case EntityType.WorldItem:
+                        break;
+                    case EntityType.Resource:
+                        break;
+                    case EntityType.Breach:
+                        break;
+                    case EntityType.ControlObjects:
+                        break;
+                    case EntityType.HideoutDecoration:
+                        break;
+                    case EntityType.CraftUnlock:
+                        break;
+                    case EntityType.Daemon:
+                        break;
+                    case EntityType.TownPortal:
+                        break;
+                    case EntityType.Monolith:
+                        break;
+                    case EntityType.MiniMonolith:
+                        break;
+                    case EntityType.BetrayalChoice:
+                        break;
+                    case EntityType.IngameIcon:
+                        break;
+                    case EntityType.LegionMonolith:
+                        break;
+                    case EntityType.Item:
+                        break;
+                    case EntityType.Terrain:
+                        break;
+                    case EntityType.DelveCraftingBench:
+                        break;
+                    case EntityType.GuildStash:
+                        break;
+                    case EntityType.MiscellaneousObjects:
+                        break;
+                    case EntityType.Door:
+                        break;
+                    case EntityType.DoorSwitch:
                         break;
                 }
 
-                if (!shouldDraw) continue;
+                if (!drawSettings.Enable) continue;
 
                 var pathComp = icon.Entity?.GetComponent<Pathfinding>();
                 if (pathComp == null) continue;
@@ -176,61 +311,74 @@ namespace WhereAreYouGoing
                 var gridToWorldToScreenList = new List<Vector2>();
                 var gridToWorldList = new List<Vector2>();
                 var pathingNodesWorld = pathComp.PathingNodes;
-                gridToWorldToScreenList = GridDestinationToWorldToScreen(pathingNodesWorld, icon.Entity);
-
-                if (Settings.DrawOnWorld)
-                    gridToWorldList = GridDestinationToWorld(pathingNodesWorld, icon.Entity);
 
                 switch (actionFlag)
                 {
                     case ActionFlags.None:
+                        if (drawSettings.World.AlwaysRenderCircle)
+                            DrawEllipseToWorld(icon.Entity.Pos, (int)component.Bounds.X, 15, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                         break;
                     case ActionFlags.UsingAbility:
-                        var castPosConvert = new Vector2();
-                        var castDestination = actorComp.CurrentAction.Destination;
-
-
-                        var castGridToWorld = WorldPositionExtensions.GridToWorld(new Vector2(actorComp.CurrentAction.Destination.X, actorComp.CurrentAction.Destination.Y));
-                        var gridToWorld2 = WorldPositionExtensions.GridToWorld(icon.Entity.GridPos);
-                        var worldToSreen = GameController.Game.IngameState.Camera.WorldToScreen(new Vector3(castGridToWorld.X, castGridToWorld.Y, iconZ + component.Bounds.Z));
-                        var worldToSreen2 = GameController.Game.IngameState.Camera.WorldToScreen(new Vector3(gridToWorld2.X, gridToWorld2.Y, iconZ + component.Bounds.Z));
-
-                        if (Settings.DrawOnMap)
+                        if (drawSettings.World.DrawAttack)
                         {
+                            var castPosConvert = new Vector2();
+                            var castDestination = actorComp.CurrentAction.Destination;
 
-                            Vector2 position;
 
-                            if (largeMap)
+                            var castGridToWorld = WorldPositionExtensions.GridToWorld(new Vector2(actorComp.CurrentAction.Destination.X, actorComp.CurrentAction.Destination.Y));
+                            var gridToWorld2 = WorldPositionExtensions.GridToWorld(icon.Entity.GridPos);
+                            var worldToSreen = GameController.Game.IngameState.Camera.WorldToScreen(new Vector3(castGridToWorld.X, castGridToWorld.Y, iconZ + component.Bounds.Z));
+                            var worldToSreen2 = GameController.Game.IngameState.Camera.WorldToScreen(new Vector3(gridToWorld2.X, gridToWorld2.Y, iconZ + component.Bounds.Z));
+
+                            if (drawSettings.Map.Enable)
                             {
-                                position = screentCenterCache + Helper.DeltaInWorldToMinimapDelta(
-                                               icon.GridPosition() - playerPos, diag, scale, (iconZ - posZ) / (9f / mapWindowLargeMapZoom));
-                                castPosConvert = screentCenterCache +
-                                                 Helper.DeltaInWorldToMinimapDelta(
-                                                     new Vector2(castDestination.X, castDestination.Y) - playerPos,
-                                                     diag, scale,
-                                                     (iconZ - posZ) / (9f / mapWindowLargeMapZoom));
-                            }
-                            else
-                            {
-                                position = screentCenterCache +
-                                           Helper.DeltaInWorldToMinimapDelta(icon.GridPosition() - playerPos, diag, 240f, (iconZ - posZ) / 20);
-                                castPosConvert = screentCenterCache +
-                                                 Helper.DeltaInWorldToMinimapDelta(
-                                                     new Vector2(castDestination.X, castDestination.Y) - playerPos,
-                                                     diag, 240f,
-                                                     (iconZ - posZ) / 20);
+                                if (drawSettings.Map.DrawAttack)
+                                {
+
+                                    Vector2 position;
+
+                                    if (largeMap)
+                                    {
+                                        position = screentCenterCache + Helper.DeltaInWorldToMinimapDelta(
+                                                       icon.GridPosition() - playerPos, diag, scale, (iconZ - posZ) / (9f / mapWindowLargeMapZoom));
+                                        castPosConvert = screentCenterCache +
+                                                         Helper.DeltaInWorldToMinimapDelta(
+                                                             new Vector2(castDestination.X, castDestination.Y) - playerPos,
+                                                             diag, scale,
+                                                             (iconZ - posZ) / (9f / mapWindowLargeMapZoom));
+                                    }
+                                    else
+                                    {
+                                        position = screentCenterCache +
+                                                   Helper.DeltaInWorldToMinimapDelta(icon.GridPosition() - playerPos, diag, 240f, (iconZ - posZ) / 20);
+                                        castPosConvert = screentCenterCache +
+                                                         Helper.DeltaInWorldToMinimapDelta(
+                                                             new Vector2(castDestination.X, castDestination.Y) - playerPos,
+                                                             diag, 240f,
+                                                             (iconZ - posZ) / 20);
+                                    }
+
+                                    // map
+                                    Graphics.DrawLine(position, castPosConvert, drawSettings.Map.LineThickness, drawSettings.Colors.MapAttackColor);
+                                }
                             }
 
-                            // map
-                            Graphics.DrawLine(position, castPosConvert, 2, Settings.AttackPathColor);
+                            // world
+                            if (drawSettings.World.Enable)
+                            {
+                                DrawEllipseToWorld(icon.Entity.Pos, (int)component.Bounds.X, 15, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
+
+                                if (drawSettings.World.DrawLine)
+                                    Graphics.DrawLine(worldToSreen2, worldToSreen, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
+
+                                DrawEllipseToWorld(new Vector3(castGridToWorld.X, castGridToWorld.Y, icon.Entity.Pos.Z), (int)component.Bounds.X / 3, 10, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
+                            }
                         }
-
-                        // world
-                        if (Settings.DrawOnWorld)
+                        else
                         {
-                            DrawEllipseToWorld(icon.Entity.Pos, (int)component.Bounds.X, 15, 3, Settings.AttackPathColor);
-                            Graphics.DrawLine(worldToSreen2, worldToSreen, 5, Settings.AttackPathColor);
-                            DrawEllipseToWorld(new Vector3(castGridToWorld.X, castGridToWorld.Y, icon.Entity.Pos.Z), (int)component.Bounds.X / 3, 10, 3, Settings.AttackPathColor);
+
+                            if (drawSettings.World.AlwaysRenderCircle)
+                                DrawEllipseToWorld(icon.Entity.Pos, (int)component.Bounds.X, 15, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                         }
                         break;
                     case ActionFlags.AbilityCooldownActive:
@@ -241,46 +389,56 @@ namespace WhereAreYouGoing
                         break;
                     case ActionFlags.Moving:
                     {
-                        if (Settings.DrawOnMap)
+                        if (drawSettings.Map.Enable)
                         {
-                            foreach (var pathNode in pathingNodes)
-                            {
-                                if (largeMap)
-                                    mapPathNodes.Add(screentCenterCache +
-                                                     Helper.DeltaInWorldToMinimapDelta(
-                                                         new Vector2(pathNode.X, pathNode.Y) - playerPos, diag, scale,
-                                                         (iconZ - posZ) / (9f / mapWindowLargeMapZoom)));
-                                else
-                                    mapPathNodes.Add(screentCenterCache +
-                                                     Helper.DeltaInWorldToMinimapDelta(
-                                                         new Vector2(pathNode.X, pathNode.Y) - playerPos, diag, 240f,
-                                                         (iconZ - posZ) / 20));
-                            }
+                            if (drawSettings.Map.DrawDestination)
+                                foreach (var pathNode in pathingNodes)
+                                {
+                                    if (largeMap)
+                                        mapPathNodes.Add(screentCenterCache +
+                                                         Helper.DeltaInWorldToMinimapDelta(
+                                                             new Vector2(pathNode.X, pathNode.Y) - playerPos, diag, scale,
+                                                             (iconZ - posZ) / (9f / mapWindowLargeMapZoom)));
+                                    else
+                                        mapPathNodes.Add(screentCenterCache +
+                                                         Helper.DeltaInWorldToMinimapDelta(
+                                                             new Vector2(pathNode.X, pathNode.Y) - playerPos, diag, 240f,
+                                                             (iconZ - posZ) / 20));
+                                }
 
                             if (mapPathNodes.Count > 0)
                             {
                                 for (int i = 0; i < mapPathNodes.Count - 1; i++)
                                 {
-                                    Graphics.DrawLine(mapPathNodes[i], mapPathNodes[i + 1], 2, color);
+                                    Graphics.DrawLine(mapPathNodes[i], mapPathNodes[i + 1], drawSettings.Map.LineThickness, drawSettings.Colors.MapColor);
                                 }
                             }
                         }
 
                         // world
-                        if (Settings.DrawOnWorld)
+                        if (drawSettings.World.Enable)
                         {
-                            if (gridToWorldToScreenList.Count > 0)
-                            {
-                                for (int i = 0; i < gridToWorldToScreenList.Count - 1; i++)
-                                {
-                                    Graphics.DrawLine(gridToWorldToScreenList[i], gridToWorldToScreenList[i + 1], 5, color);
-                                }
-                            }
+                            if (drawSettings.World.DrawLine)
+                             {
+                                 gridToWorldToScreenList = GridDestinationToWorldToScreen(pathingNodesWorld, icon.Entity);
+
+                                 if (gridToWorldToScreenList.Count > 0)
+                                 {
+                                     for (int i = 0; i < gridToWorldToScreenList.Count - 1; i++)
+                                     {
+                                         Graphics.DrawLine(gridToWorldToScreenList[i], gridToWorldToScreenList[i + 1], drawSettings.World.LineThickness, drawSettings.Colors.WorldColor);
+                                     }
+                                 }
+                             }
 
                             // entity pos circle
-                            DrawEllipseToWorld(icon.Entity.Pos, (int) component.Bounds.X, 15, 3, color);
+                            DrawEllipseToWorld(icon.Entity.Pos, (int) component.Bounds.X, 15, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                             // destination circle
-                            DrawEllipseToWorld( new Vector3(gridToWorldList.Last().X, gridToWorldList.Last().Y, icon.Entity.Pos.Z), (int) component.Bounds.X / 3, 10, 3, color);
+                            if (drawSettings.World.DrawDestinationEndPoint)
+                            {
+                                gridToWorldList = GridDestinationToWorld(pathingNodesWorld, icon.Entity);
+                                DrawEllipseToWorld(new Vector3(gridToWorldList.Last().X, gridToWorldList.Last().Y, icon.Entity.Pos.Z), (int)component.Bounds.X / 3, 10, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                            }
                         }
 
                         break;
@@ -358,6 +516,39 @@ namespace WhereAreYouGoing
                 var point2 = camera.WorldToScreen(plottedCirclePoints[i + 1]);
                 Graphics.DrawLine(point1, point2, lineWidth, color);
             }
+        }
+    }
+
+    public class WAYGConfig
+    {
+        public bool Enable { get; set; } = true;
+        public WAYGColors Colors { get; set; } = new WAYGColors();
+        public WAYGWorld World { get; set; } = new WAYGWorld();
+        public WAYGMap Map { get; set; } = new WAYGMap();
+        public class WAYGMap
+        {
+            public bool Enable { get; set; } = true;
+            public bool DrawAttack { get; set; } = true;
+            public bool DrawDestination { get; set; } = true;
+            public int LineThickness { get; set; } = 5;
+        }
+        public class WAYGWorld
+        {
+            public bool Enable { get; set; } = true;
+            public bool DrawAttack { get; set; } = true;
+            public bool DrawAttackEndPoint { get; set; } = true;
+            public bool DrawDestinationEndPoint { get; set; } = true;
+            public bool DrawLine { get; set; } = true;
+            public bool AlwaysRenderCircle { get; set; } = true;
+            public int RenderCircleThickness { get; set; } = 5;
+            public int LineThickness { get; set; } = 5;
+        }
+        public class WAYGColors
+        {
+            public Color MapColor { get; set; } = Color.White;
+            public Color MapAttackColor { get; set; } = Color.Red;
+            public Color WorldColor { get; set; } = Color.White;
+            public Color WorldAttackColor { get; set; } = Color.Red;
         }
     }
 }
