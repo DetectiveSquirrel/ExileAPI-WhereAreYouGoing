@@ -185,6 +185,7 @@ namespace WhereAreYouGoing
             {
                 if (icon == null) continue;
                 if (icon.Entity == null) continue;
+                if (icon.Entity.DistancePlayer > Settings.MaxDistance) continue;
 
                 var component = icon?.Entity?.GetComponent<Render>();
                 if (component == null) continue;

@@ -9,6 +9,7 @@ namespace WhereAreYouGoing
     {
         public ToggleNode MultiThreading { get; set; } = new ToggleNode(false);
         public ToggleNode Enable { get; set; } = new ToggleNode(true);
+        public RangeNode<int> MaxDrawDistance { get; set; } = new RangeNode<int>(120, 0, 200);
         public WAYGConfig NormalMonster { get; set; } = new WAYGConfig()
         {
             Enable = true,
