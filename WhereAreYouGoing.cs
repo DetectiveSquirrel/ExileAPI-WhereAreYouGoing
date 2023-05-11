@@ -185,7 +185,7 @@ namespace WhereAreYouGoing
             {
                 if (icon == null) continue;
                 if (icon.Entity == null) continue;
-                if (icon.Entity.DistancePlayer > Settings.MaxDistance) continue;
+                if (icon.Entity.DistancePlayer > Settings.MaxDrawDistance) continue;
 
                 var component = icon?.Entity?.GetComponent<Render>();
                 if (component == null) continue;
@@ -315,6 +315,7 @@ namespace WhereAreYouGoing
 
                 switch (actionFlag)
                 {
+                    case (ActionFlags)512:
                     case ActionFlags.None:
                         if (drawSettings.World.AlwaysRenderCircle)
                             DrawEllipseToWorld(icon.Entity.Pos, (int)component.Bounds.X, 15, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
