@@ -1,5 +1,4 @@
-﻿using ExileCore.Shared.Attributes;
-using ExileCore.Shared.Interfaces;
+﻿using ExileCore.Shared.Interfaces;
 using ExileCore.Shared.Nodes;
 using SharpDX;
 
@@ -7,8 +6,9 @@ namespace WhereAreYouGoing
 {
     public class WhereAreYouGoingSettings : ISettings
     {
+        //Mandatory setting to allow enabling/disabling your plugin
+        public ToggleNode Enable { get; set; } = new ToggleNode(false);
         public ToggleNode MultiThreading { get; set; } = new ToggleNode(false);
-        public ToggleNode Enable { get; set; } = new ToggleNode(true);
         public RangeNode<int> MaxDrawDistance { get; set; } = new RangeNode<int>(120, 0, 200);
         public WAYGConfig NormalMonster { get; set; } = new WAYGConfig()
         {
@@ -124,6 +124,35 @@ namespace WhereAreYouGoing
                 DrawAttack = true,
                 DrawDestination = true,
                 LineThickness = 3
+            }
+        };
+        public WAYGConfig Self { get; set; } = new WAYGConfig()
+        {
+            Enable = true,
+            Colors = new WAYGConfig.WAYGColors
+            {
+                MapColor = new Color(35, 194, 47, 193),
+                MapAttackColor = new Color(255, 0, 0, 255),
+                WorldColor = new Color(35, 194, 47, 193),
+                WorldAttackColor = new Color(255, 0, 0, 255),
+            },
+            World = new WAYGConfig.WAYGWorld
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawAttackEndPoint = true,
+                DrawDestinationEndPoint = true,
+                DrawLine = true,
+                AlwaysRenderCircle = true,
+                RenderCircleThickness = 3,
+                LineThickness = 6
+            },
+            Map = new WAYGConfig.WAYGMap
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawDestination = true,
+                LineThickness = 5
             }
         };
         public WAYGConfig Players { get; set; } = new WAYGConfig()
