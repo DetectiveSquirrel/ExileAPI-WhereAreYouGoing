@@ -6,6 +6,14 @@ namespace WhereAreYouGoing
 {
     public class Helper
     {
+        /// <summary>
+        /// Converts the delta in world coordinates to the corresponding delta in minimap coordinates.
+        /// </summary>
+        /// <param name="delta">The delta in world coordinates to convert.</param>
+        /// <param name="diag">The diagonal distance in world units.</param>
+        /// <param name="scale">The scale factor for converting world units to minimap units.</param>
+        /// <param name="deltaZ">The delta in the Z-axis (vertical) coordinate.</param>
+        /// <returns>The delta in minimap coordinates.</returns>
         public static Vector2 DeltaInWorldToMinimapDelta(Vector2 delta, double diag, float scale, float deltaZ = 0)
         {
             const float CAMERA_ANGLE = 38 * MathUtil.Pi / 180;

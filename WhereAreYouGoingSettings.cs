@@ -8,8 +8,9 @@ namespace WhereAreYouGoing
     {
         //Mandatory setting to allow enabling/disabling your plugin
         public ToggleNode Enable { get; set; } = new ToggleNode(false);
+
         public ToggleNode MultiThreading { get; set; } = new ToggleNode(false);
-        public RangeNode<int> MaxDrawDistance { get; set; } = new RangeNode<int>(120, 0, 200);
+        public RangeNode<int> MaxCircleDrawDistance { get; set; } = new RangeNode<int>(120, 0, 200);
         public WAYGConfig NormalMonster { get; set; } = new WAYGConfig()
         {
             Enable = true,

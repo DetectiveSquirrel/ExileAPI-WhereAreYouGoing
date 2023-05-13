@@ -22,20 +22,20 @@ namespace WhereAreYouGoing
         private CachedValue<RectangleF> _mapRect;
         private CachedValue<float> _diag;
         private Camera Camera => GameController.Game.IngameState.Camera;
-        private Map mapWindow => GameController.Game.IngameState.IngameUi.Map;
-        private RectangleF MapRect => _mapRect?.Value ?? (_mapRect = new TimeCache<RectangleF>(() => mapWindow.GetClientRect(), 100)).Value;
+        private Map MapWindow => GameController.Game.IngameState.IngameUi.Map;
+        private RectangleF CurrentMapRect => _mapRect?.Value ?? (_mapRect = new TimeCache<RectangleF>(() => MapWindow.GetClientRect(), 100)).Value;
 
-        private Vector2 screenCenter =>
-            new Vector2(MapRect.Width / 2, (MapRect.Height / 2) - 20) + new Vector2(MapRect.X, MapRect.Y) +
-            new Vector2(mapWindow.LargeMapShiftX, mapWindow.LargeMapShiftY);
+        private Vector2 ScreenCenter =>
+            new Vector2(CurrentMapRect.Width / 2, (CurrentMapRect.Height / 2) - 20) + new Vector2(CurrentMapRect.X, CurrentMapRect.Y) +
+            new Vector2(MapWindow.LargeMapShiftX, MapWindow.LargeMapShiftY);
 
         private IngameUIElements ingameStateIngameUi;
-        private Vector2 screentCenterCache;
+        private Vector2 ScreenCenterCache;
         private bool largeMap;
         private float scale;
         private float k;
 
-        private float diag =>
+        private float Diagonal =>
             _diag?.Value ?? (_diag = new TimeCache<float>(() =>
             {
                 if (ingameStateIngameUi.Map.SmallMiniMap.IsVisibleLocal)
@@ -119,21 +119,21 @@ namespace WhereAreYouGoing
         public override Job Tick()
         {
             ingameStateIngameUi = GameController.Game.IngameState.IngameUi;
+            k = Camera.Width < 1024f ? 1120f : 1024f;
 
             if (ingameStateIngameUi.Map.SmallMiniMap.IsVisibleLocal)
             {
                 var mapRect = ingameStateIngameUi.Map.SmallMiniMap.GetClientRectCache;
-                screentCenterCache = new Vector2(mapRect.X + (mapRect.Width / 2), mapRect.Y + (mapRect.Height / 2));
+                ScreenCenterCache = new Vector2(mapRect.X + (mapRect.Width / 2), mapRect.Y + (mapRect.Height / 2));
                 largeMap = false;
             }
             else if (ingameStateIngameUi.Map.LargeMap.IsVisibleLocal)
             {
-                screentCenterCache = screenCenter;
+                ScreenCenterCache = ScreenCenter;
                 largeMap = true;
             }
 
-            k = Camera.Width < 1024f ? 1120f : 1024f;
-            scale = k / Camera.Height * Camera.Width * 3f / 4f / mapWindow.LargeMapZoom;
+            scale = k / Camera.Height * Camera.Width * 3f / 4f / MapWindow.LargeMapZoom;
             return null;
         }
 
@@ -150,12 +150,13 @@ namespace WhereAreYouGoing
             if (playerRender == null) return;
             var posZ = GameController.Player.PosNum.Z;
 
-            if (mapWindow == null) return;
-            var mapWindowLargeMapZoom = mapWindow.LargeMapZoom;
+            if (MapWindow == null) return;
+            var mapWindowLargeMapZoom = MapWindow.LargeMapZoom;
 
             var baseIcons = GameController?.EntityListWrapper?.OnlyValidEntities
                 .SelectWhereF(x => x.GetHudComponent<BaseIcon>(), icon => icon != null).OrderByF(x => x.Priority)
                 .ToList();
+
             if (baseIcons == null) return;
 
             foreach (var icon in baseIcons)
@@ -215,74 +216,67 @@ namespace WhereAreYouGoing
 
                 var actionFlag = actorComp.Action;
 
+                var shouldDrawCircle = icon.Entity.DistancePlayer < Settings.MaxCircleDrawDistance;
+
                 switch (actionFlag)
                 {
                     case (ActionFlags)512:
                     case ActionFlags.None:
-
                         if (drawSettings.World.AlwaysRenderCircle)
-                            if (icon.Entity.DistancePlayer < Settings.MaxDrawDistance)
-                                DrawPosNumCircleInWorld(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                        {
+                            if (shouldDrawCircle)
+                                DrawCircleInWorldPosition(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                        }
 
                         break;
 
                     case ActionFlags.UsingAbility:
-                        if (drawSettings.World.DrawAttack)
+                        var castGridDestination = actorComp.CurrentAction.Destination;
+
+                        if (drawSettings.Map.Enable && drawSettings.Map.DrawAttack)
                         {
-                            var entityGridPosNum = GetWorldScreenPosition(icon.Entity.GridPosNum);
-                            var castDestination = actorComp.CurrentAction.Destination;
-                            var entityGridCastPosNum = GetWorldScreenPosition(castDestination);
+                            var entityTerrainHeight = QueryGridPositionToWorldWithTerrainHeight(icon.Entity.GridPosNum);
+                            var entityCastTerrainHeight = QueryGridPositionToWorldWithTerrainHeight(castGridDestination);
+
+                            Vector2 position;
                             var castPosConvert = new Vector2();
-
-                            if (drawSettings.Map.Enable)
+                            if (largeMap)
                             {
-                                if (drawSettings.Map.DrawAttack)
-                                {
-                                    Vector2 position;
-                                    var entityTerrainHeight = ExpandWithTerrainHeight(icon.Entity.GridPosNum);
-                                    var entityCastTerrainHeight = ExpandWithTerrainHeight(actorComp.CurrentAction.Destination);
-
-                                    if (largeMap)
-                                    {
-                                        position = screentCenterCache + Helper.DeltaInWorldToMinimapDelta(icon.GridPositionNum() - playerPos, diag, scale, (entityTerrainHeight.Z - posZ) / (9f / mapWindowLargeMapZoom));
-
-                                        castPosConvert = screentCenterCache + Helper.DeltaInWorldToMinimapDelta(new Vector2(castDestination.X, castDestination.Y) - playerPos, diag, scale, (entityCastTerrainHeight.Z - posZ) / (9f / mapWindowLargeMapZoom));
-                                    }
-                                    else
-                                    {
-                                        position = screentCenterCache + Helper.DeltaInWorldToMinimapDelta(icon.GridPositionNum() - playerPos, diag, 240f, (entityTerrainHeight.Z - posZ) / 20);
-                                        castPosConvert = screentCenterCache + Helper.DeltaInWorldToMinimapDelta(new Vector2(castDestination.X, castDestination.Y) - playerPos, diag, 240f, (entityCastTerrainHeight.Z - posZ) / 20);
-                                    }
-
-                                    // map
-                                    Graphics.DrawLine(position, castPosConvert, drawSettings.Map.LineThickness, drawSettings.Colors.MapAttackColor);
-                                }
+                                position = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(icon.GridPositionNum() - playerPos, Diagonal, scale, (entityTerrainHeight.Z - posZ) / (9f / mapWindowLargeMapZoom));
+                                castPosConvert = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(new Vector2(castGridDestination.X, castGridDestination.Y) - playerPos, Diagonal, scale, (entityCastTerrainHeight.Z - posZ) / (9f / mapWindowLargeMapZoom));
+                            }
+                            else
+                            {
+                                position = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(icon.GridPositionNum() - playerPos, Diagonal, 240f, (entityTerrainHeight.Z - posZ) / 20);
+                                castPosConvert = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(new Vector2(castGridDestination.X, castGridDestination.Y) - playerPos, Diagonal, 240f, (entityCastTerrainHeight.Z - posZ) / 20);
                             }
 
-                            if (drawSettings.World.Enable)
+                            Graphics.DrawLine(position, castPosConvert, drawSettings.Map.LineThickness, drawSettings.Colors.MapAttackColor);
+                        }
+
+                        if (drawSettings.World.Enable && drawSettings.World.DrawAttack)
+                        {
+                            if (shouldDrawCircle)
+                                DrawCircleInWorldPosition(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
+
+                            if (drawSettings.World.DrawLine)
                             {
+                                var entityScreenCastPosition = QueryWorldScreenPositionWithTerrainHeight(castGridDestination.ToVector2Num());
+                                var entityWorldPosition = QueryWorldScreenPositionWithTerrainHeight(icon.Entity.GridPosNum);
+                                Graphics.DrawLine(entityWorldPosition, entityScreenCastPosition, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
+                            }
 
-                                if (icon.Entity.DistancePlayer < Settings.MaxDrawDistance)
-                                    DrawPosNumCircleInWorld(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
-
-                                if (drawSettings.World.DrawLine)
-                                {
-                                    Graphics.DrawLine(entityGridPosNum, entityGridCastPosNum, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
-                                }
-
-                                if (drawSettings.World.DrawAttackEndPoint)
-                                {
-                                    var worldPosFromGrid = new Vector3(castDestination.GridToWorld().X, castDestination.GridToWorld().Y, 0);
-                                    if (icon.Entity.DistancePlayer < Settings.MaxDrawDistance)
-                                        DrawPosNumCircleInWorld(new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
-                                }
+                            if (drawSettings.World.DrawAttackEndPoint)
+                            {
+                                var worldPosFromGrid = new Vector3(castGridDestination.GridToWorld().X, castGridDestination.GridToWorld().Y, 0);
+                                if (shouldDrawCircle)
+                                    DrawCircleInWorldPosition(new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
                             }
                         }
                         else
                         {
-                            if (drawSettings.World.AlwaysRenderCircle)
-                                if (icon.Entity.DistancePlayer < Settings.MaxDrawDistance)
-                                    DrawPosNumCircleInWorld(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                            if (drawSettings.World.AlwaysRenderCircle && shouldDrawCircle)
+                                DrawCircleInWorldPosition(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                         }
                         break;
 
@@ -304,27 +298,27 @@ namespace WhereAreYouGoing
                             {
                                 foreach (var pathNode in pathComp.PathingNodes)
                                 {
-                                    var expandedHeight = ExpandWithTerrainHeight(pathNode);
-                                    var terrainHeight = expandedHeight.Z;
-                                    mapPathNodes.Add(screentCenterCache + Helper.DeltaInWorldToMinimapDelta(new Vector2(pathNode.X, pathNode.Y) - playerPos, diag, largeMap ? scale : 240f, (terrainHeight - posZ) / (largeMap ? (9f / mapWindowLargeMapZoom) : 20)));
+                                    var queriedHeight = QueryGridPositionToWorldWithTerrainHeight(pathNode);
+                                    mapPathNodes.Add(ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(new Vector2(pathNode.X, pathNode.Y) - playerPos, Diagonal, largeMap ? scale : 240f, (queriedHeight.Z - posZ) / (largeMap ? (9f / mapWindowLargeMapZoom) : 20)));
                                 }
                             }
 
                             if (mapPathNodes.Count > 0)
                             {
-                                for (int i = 0; i < mapPathNodes.Count - 1; i++)
+                                for (var i = 0; i < mapPathNodes.Count - 1; i++)
                                 {
                                     Graphics.DrawLine(mapPathNodes[i], mapPathNodes[i + 1], drawSettings.Map.LineThickness, drawSettings.Colors.MapColor);
                                 }
                             }
                         }
 
-                        // world
                         if (drawSettings.World.Enable)
                         {
-                            if (drawSettings.World.DrawLine && pathComp.PathingNodes.Any())
+                            var pathingNodes = pathComp.PathingNodes.ConvertToVector2List();
+
+                            if (drawSettings.World.DrawLine && pathingNodes.Any())
                             {
-                                var pathingNodesToWorld = GetWorldScreenPositions(pathComp.PathingNodes.ConvertToVector2List());
+                                var pathingNodesToWorld = QueryWorldScreenPositionsWithTerrainHeight(pathingNodes);
 
                                 var previousPoint = pathingNodesToWorld.First();
                                 foreach (var currentPoint in pathingNodesToWorld.Skip(1))
@@ -334,15 +328,15 @@ namespace WhereAreYouGoing
                                 }
                             }
 
-                            if (drawSettings.World.DrawDestinationEndPoint && pathComp.PathingNodes.Any())
+                            if (drawSettings.World.DrawDestinationEndPoint && pathingNodes.Any() && shouldDrawCircle)
                             {
-                                var pathingNodesToWorld = GetWorldScreenPositions(pathComp.PathingNodes.ConvertToVector2List());
-                                var worldPosFromGrid = new Vector3(pathingNodesToWorld.Last().X, pathingNodesToWorld.Last().Y, 0);
-                                //DrawPosNumCircleInWorld(new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                var pathingNodesToWorld = QueryWorldScreenPositionsWithTerrainHeight(pathingNodes);
+                                var queriedWorldPos = new Vector3(pathingNodesToWorld.Last().X, pathingNodesToWorld.Last().Y, 0);
+                                DrawCircleInWorldPosition(queriedWorldPos, component.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                             }
 
-                            if (drawSettings.World.AlwaysRenderCircle)
-                                DrawPosNumCircleInWorld(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                            if (drawSettings.World.AlwaysRenderCircle && shouldDrawCircle)
+                                DrawCircleInWorldPosition(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                         }
                         break;
 
@@ -357,22 +351,47 @@ namespace WhereAreYouGoing
             }
         }
 
-        private Vector2 GetWorldScreenPosition(Vector2 gridPos)
+        /// <summary>
+        /// Queries the world screen position with terrain height for the given grid position.
+        /// </summary>
+        /// <param name="gridPosition">The grid position to query.</param>
+        /// <returns>The world screen position with terrain height.</returns>
+        private Vector2 QueryWorldScreenPositionWithTerrainHeight(Vector2 gridPosition)
         {
-            return Camera.WorldToScreen(ExpandWithTerrainHeight(gridPos));
+            // Query the world screen position with terrain height for the given grid position
+            return Camera.WorldToScreen(QueryGridPositionToWorldWithTerrainHeight(gridPosition));
         }
 
-        private List<Vector2> GetWorldScreenPositions(List<Vector2> gridPositions)
+        /// <summary>
+        /// Queries the world screen positions with terrain height for the given grid positions.
+        /// </summary>
+        /// <param name="gridPositions">The grid positions to query.</param>
+        /// <returns>The world screen positions with terrain height.</returns>
+        private List<Vector2> QueryWorldScreenPositionsWithTerrainHeight(List<Vector2> gridPositions)
         {
-            return gridPositions.Select(gridPos => Camera.WorldToScreen(ExpandWithTerrainHeight(gridPos))).ToList();
+            // Query the world screen positions with terrain height for the given grid positions
+            return gridPositions.Select(gridPos => Camera.WorldToScreen(QueryGridPositionToWorldWithTerrainHeight(gridPos))).ToList();
         }
 
-        private Vector3 ExpandWithTerrainHeight(Vector2 gridPosition)
+        /// <summary>
+        /// Queries the grid position and extracts the corresponding terrain height.
+        /// </summary>
+        /// <param name="gridPosition">The grid position to query.</param>
+        /// <returns>The world position with the extracted terrain height.</returns>
+        private Vector3 QueryGridPositionToWorldWithTerrainHeight(Vector2 gridPosition)
         {
-            return new Vector3(gridPosition.GridToWorld(), GameController.IngameState.Data.GetTerrainHeightAt(gridPosition));
+            // Query the grid position and extract the corresponding world position with terrain height
+            return new Vector3(gridPosition.GridToWorld(), (float)GameController.IngameState.Data.GetTerrainHeightAt(gridPosition));
         }
 
-        private void DrawPosNumCircleInWorld(Vector3 position, float radius, int thickness, Color color)
+        /// <summary>
+        /// Draws a circle at the specified world position with the given radius, thickness, and color.
+        /// </summary>
+        /// <param name="position">The world position to draw the circle at.</param>
+        /// <param name="radius">The radius of the circle.</param>
+        /// <param name="thickness">The thickness of the circle's outline.</param>
+        /// <param name="color">The color of the circle.</param>
+        private void DrawCircleInWorldPosition(Vector3 position, float radius, int thickness, Color color)
         {
             const int segments = 15;
             const float segmentAngle = 2f * MathF.PI / segments;
