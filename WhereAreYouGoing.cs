@@ -303,7 +303,7 @@ namespace WhereAreYouGoing
                                 }
                             }
 
-                            if (mapPathNodes.Count > 0)
+                            if (mapPathNodes.AddOffset(drawSettings.Map.LineThickness).Count > 0)
                             {
                                 for (var i = 0; i < mapPathNodes.Count - 1; i++)
                                 {

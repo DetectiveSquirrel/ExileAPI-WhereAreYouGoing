@@ -19,5 +19,73 @@ namespace WhereAreYouGoing
         {
             return vector2iList.Select(v => new Vector2(v.X, v.Y)).ToList();
         }
+
+        /// <summary>
+        /// Adds an offset to each Vector2 in the list.
+        /// </summary>
+        /// <param name="vectorList">The list of Vector2 objects to modify.</param>
+        /// <param name="offsetX">The offset value to add to the X component of each vector.</param>
+        /// <param name="offsetY">The offset value to add to the Y component of each vector.</param>
+        public static List<Vector2> AddOffset(this List<Vector2> vectorList, float offsetX, float offsetY)
+        {
+            List<Vector2> modifiedList = new List<Vector2>(vectorList.Count);
+
+            for (int i = 0; i < vectorList.Count; i++)
+            {
+                Vector2 vector = vectorList[i];
+                vector.X += offsetX;
+                vector.Y += offsetY;
+                modifiedList.Add(vector);
+            }
+
+            return modifiedList;
+        }
+
+        /// <summary>
+        /// Adds an offset to each Vector2 in the list.
+        /// </summary>
+        /// <param name="vectorList">The list of Vector2 objects to modify.</param>
+        /// <param name="offset">The offset value to add to each vector.</param>
+        public static List<Vector2> AddOffset(this List<Vector2> vectorList, float offset)
+        {
+            List<Vector2> modifiedList = new List<Vector2>(vectorList.Count);
+
+            for (int i = 0; i < vectorList.Count; i++)
+            {
+                Vector2 vector = vectorList[i];
+                vector.X += offset;
+                vector.Y += offset;
+                modifiedList.Add(vector);
+            }
+
+            return modifiedList;
+        }
+
+        /// <summary>
+        /// Adds an offset to the X and Y components of a Vector2.
+        /// </summary>
+        /// <param name="vector">The Vector2 to modify.</param>
+        /// <param name="offsetX">The offset value to add to the X component.</param>
+        /// <param name="offsetY">The offset value to add to the Y component.</param>
+        /// <returns>The modified Vector2 with the added offset.</returns>
+        public static Vector2 AddOffset(this Vector2 vector, float offsetX, float offsetY)
+        {
+            vector.X += offsetX;
+            vector.Y += offsetY;
+            return vector;
+        }
+
+        /// <summary>
+        /// Adds an offset to the X and Y components of a Vector2.
+        /// </summary>
+        /// <param name="vector">The Vector2 to modify.</param>
+        /// <param name="offset">The offset value to add to each vector.</param>
+        /// <returns>The modified Vector2 with the added offset.</returns>
+        public static Vector2 AddOffset(this Vector2 vector, float offset)
+        {
+            vector.X += offset;
+            vector.Y += offset;
+            return vector;
+        }
     }
 }
