@@ -266,11 +266,10 @@ namespace WhereAreYouGoing
                                 Graphics.DrawLine(entityWorldPosition, entityScreenCastPosition, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
                             }
 
-                            if (drawSettings.World.DrawAttackEndPoint)
+                            if (drawSettings.World.DrawAttackEndPoint && shouldDrawCircle)
                             {
                                 var worldPosFromGrid = new Vector3(castGridDestination.GridToWorld().X, castGridDestination.GridToWorld().Y, 0);
-                                if (shouldDrawCircle)
-                                    DrawCircleInWorldPosition(new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
+                                DrawCircleInWorldPosition(new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
                             }
                         }
                         else
@@ -331,7 +330,7 @@ namespace WhereAreYouGoing
                             if (drawSettings.World.DrawDestinationEndPoint && pathingNodes.Any() && shouldDrawCircle)
                             {
                                 var pathingNodesToWorld = QueryWorldScreenPositionsWithTerrainHeight(pathingNodes);
-                                var queriedWorldPos = new Vector3(pathingNodesToWorld.Last().X, pathingNodesToWorld.Last().Y, 0);
+                                var queriedWorldPos = new Vector3(pathingNodes.Last().GridToWorld().X, pathingNodes.Last().GridToWorld().Y, GameController.IngameState.Data.GetTerrainHeightAt(pathingNodes.Last().WorldToGrid()));
                                 DrawCircleInWorldPosition(queriedWorldPos, component.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                             }
 
