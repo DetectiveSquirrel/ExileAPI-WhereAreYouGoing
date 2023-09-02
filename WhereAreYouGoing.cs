@@ -330,8 +330,8 @@ namespace WhereAreYouGoing
                             if (drawSettings.World.DrawDestinationEndPoint && pathingNodes.Any() && shouldDrawCircle)
                             {
                                 var pathingNodesToWorld = QueryWorldScreenPositionsWithTerrainHeight(pathingNodes);
-                                var queriedWorldPos = new Vector3(pathingNodes.Last().GridToWorld().X, pathingNodes.Last().GridToWorld().Y, GameController.IngameState.Data.GetTerrainHeightAt(pathingNodes.Last().WorldToGrid()));
-                                DrawCircleInWorldPosition(queriedWorldPos, component.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                var queriedWorldPos = new Vector3(pathingNodes.Last().GridToWorld().X, pathingNodes.Last().GridToWorld().Y, 0);
+                                DrawCircleInWorldPosition(new Vector3(queriedWorldPos.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(queriedWorldPos.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                             }
 
                             if (drawSettings.World.AlwaysRenderCircle && shouldDrawCircle)
