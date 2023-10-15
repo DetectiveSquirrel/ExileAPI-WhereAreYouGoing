@@ -89,6 +89,11 @@ namespace WhereAreYouGoing
             public bool AlwaysRenderCircle { get; set; } = true;
 
             /// <summary>
+            /// Draws a filled circle when true.
+            /// </summary>
+            public bool DrawFilledCircle { get; set; } = false;
+
+            /// <summary>
             /// Gets or sets the thickness of the rendered circle in the world.
             /// </summary>
             public int RenderCircleThickness { get; set; } = 5;

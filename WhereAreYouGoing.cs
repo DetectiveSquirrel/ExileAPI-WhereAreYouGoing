@@ -89,6 +89,7 @@ namespace WhereAreYouGoing
                     settings.World.DrawDestinationEndPoint = ImGuiExtension.Checkbox("World Destination Endpoint", settings.World.DrawDestinationEndPoint);
                     settings.World.DrawLine = ImGuiExtension.Checkbox("Draw Line", settings.World.DrawLine);
                     settings.World.AlwaysRenderCircle = ImGuiExtension.Checkbox("Always Render Entity Circle", settings.World.AlwaysRenderCircle);
+                    settings.World.DrawFilledCircle = ImGuiExtension.Checkbox("Draw Filled Circle", settings.World.DrawFilledCircle);
                     settings.World.RenderCircleThickness = ImGuiExtension.IntDrag("Entity Circle Thickness", settings.World.RenderCircleThickness, 1, 100, 0.1f);
                     settings.World.LineThickness = ImGuiExtension.IntDrag("Line Thickness", settings.World.LineThickness, 1, 100, 0.1f);
                     ImGui.Spacing();
@@ -225,7 +226,7 @@ namespace WhereAreYouGoing
                         if (drawSettings.World.AlwaysRenderCircle)
                         {
                             if (shouldDrawCircle)
-                                DrawCircleInWorldPosition(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                         }
 
                         break;
@@ -257,7 +258,7 @@ namespace WhereAreYouGoing
                         if (drawSettings.World.Enable && drawSettings.World.DrawAttack)
                         {
                             if (shouldDrawCircle)
-                                DrawCircleInWorldPosition(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
 
                             if (drawSettings.World.DrawLine)
                             {
@@ -269,13 +270,13 @@ namespace WhereAreYouGoing
                             if (drawSettings.World.DrawAttackEndPoint && shouldDrawCircle)
                             {
                                 var worldPosFromGrid = new Vector3(castGridDestination.GridToWorld().X, castGridDestination.GridToWorld().Y, 0);
-                                DrawCircleInWorldPosition(new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
                             }
                         }
                         else
                         {
                             if (drawSettings.World.AlwaysRenderCircle && shouldDrawCircle)
-                                DrawCircleInWorldPosition(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                         }
                         break;
 
@@ -331,11 +332,11 @@ namespace WhereAreYouGoing
                             {
                                 var pathingNodesToWorld = QueryWorldScreenPositionsWithTerrainHeight(pathingNodes);
                                 var queriedWorldPos = new Vector3(pathingNodes.Last().GridToWorld().X, pathingNodes.Last().GridToWorld().Y, 0);
-                                DrawCircleInWorldPosition(new Vector3(queriedWorldPos.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(queriedWorldPos.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, new Vector3(queriedWorldPos.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(queriedWorldPos.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                             }
 
                             if (drawSettings.World.AlwaysRenderCircle && shouldDrawCircle)
-                                DrawCircleInWorldPosition(icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                         }
                         break;
 
@@ -410,6 +411,46 @@ namespace WhereAreYouGoing
                     thickness,
                     color
                 );
+            }
+        }
+
+        /// <summary>
+        /// Draws a filled circle at the specified world position with the given radius and color.
+        /// </summary>
+        /// <param name="position">The world position to draw the circle at.</param>
+        /// <param name="radius">The radius of the circle.</param>
+        /// <param name="color">The color of the circle.</param>
+        private void DrawFilledCircleInWorldPosition(Vector3 position, float radius, int thickness, Color color)
+        {
+            var circlePoints = new List<Vector2>();
+            const int segments = 15;
+            const float segmentAngle = 2f * MathF.PI / segments;
+
+            for (var i = 0; i < segments; i++)
+            {
+                var angle = i * segmentAngle;
+                var currentOffset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
+                var nextOffset = new Vector2(MathF.Cos(angle + segmentAngle), MathF.Sin(angle + segmentAngle)) * radius;
+
+                var currentWorldPos = position + new Vector3(currentOffset, 0);
+                var nextWorldPos = position + new Vector3(nextOffset, 0);
+
+                circlePoints.Add(Camera.WorldToScreen(currentWorldPos));
+                circlePoints.Add(Camera.WorldToScreen(nextWorldPos));
+            }
+
+            Graphics.DrawConvexPolyFilled(circlePoints.ToArray(), color);
+        }
+
+        private void DrawCircleInWorldPos(bool drawFilledCircle, Vector3 position, float radius, int thickness, Color color)
+        {
+            if (drawFilledCircle)
+            {
+                DrawFilledCircleInWorldPosition(position, radius, thickness, color);
+            }
+            else
+            {
+                DrawCircleInWorldPosition(position, radius, thickness, color);
             }
         }
     }

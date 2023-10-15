@@ -29,6 +29,7 @@ namespace WhereAreYouGoing
                 DrawDestinationEndPoint = false,
                 DrawLine = false,
                 AlwaysRenderCircle = true,
+                DrawFilledCircle = false,
                 RenderCircleThickness = 3,
                 LineThickness = 5
             },
@@ -58,6 +59,7 @@ namespace WhereAreYouGoing
                 DrawDestinationEndPoint = false,
                 DrawLine = false,
                 AlwaysRenderCircle = true,
+                DrawFilledCircle = false,
                 RenderCircleThickness = 3,
                 LineThickness = 5
             },
@@ -87,6 +89,7 @@ namespace WhereAreYouGoing
                 DrawDestinationEndPoint = true,
                 DrawLine = true,
                 AlwaysRenderCircle = true,
+                DrawFilledCircle = true,
                 RenderCircleThickness = 5,
                 LineThickness = 5
             },
@@ -116,6 +119,7 @@ namespace WhereAreYouGoing
                 DrawDestinationEndPoint = true,
                 DrawLine = true,
                 AlwaysRenderCircle = true,
+                DrawFilledCircle = true,
                 RenderCircleThickness = 5,
                 LineThickness = 5
             },
