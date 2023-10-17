@@ -28,8 +28,9 @@ namespace WhereAreYouGoing
                 DrawAttackEndPoint = true,
                 DrawDestinationEndPoint = false,
                 DrawLine = false,
-                AlwaysRenderCircle = true,
+                AlwaysRenderWorldUnit = true,
                 DrawFilledCircle = false,
+                DrawBoundingBox = false,
                 RenderCircleThickness = 3,
                 LineThickness = 5
             },
@@ -58,8 +59,9 @@ namespace WhereAreYouGoing
                 DrawAttackEndPoint = true,
                 DrawDestinationEndPoint = false,
                 DrawLine = false,
-                AlwaysRenderCircle = true,
+                AlwaysRenderWorldUnit = true,
                 DrawFilledCircle = false,
+                DrawBoundingBox = false,
                 RenderCircleThickness = 3,
                 LineThickness = 5
             },
@@ -88,8 +90,9 @@ namespace WhereAreYouGoing
                 DrawAttackEndPoint = true,
                 DrawDestinationEndPoint = true,
                 DrawLine = true,
-                AlwaysRenderCircle = true,
+                AlwaysRenderWorldUnit = true,
                 DrawFilledCircle = true,
+                DrawBoundingBox = false,
                 RenderCircleThickness = 5,
                 LineThickness = 5
             },
@@ -118,8 +121,9 @@ namespace WhereAreYouGoing
                 DrawAttackEndPoint = true,
                 DrawDestinationEndPoint = true,
                 DrawLine = true,
-                AlwaysRenderCircle = true,
+                AlwaysRenderWorldUnit = true,
                 DrawFilledCircle = true,
+                DrawBoundingBox = false,
                 RenderCircleThickness = 5,
                 LineThickness = 5
             },
@@ -148,7 +152,8 @@ namespace WhereAreYouGoing
                 DrawAttackEndPoint = true,
                 DrawDestinationEndPoint = true,
                 DrawLine = true,
-                AlwaysRenderCircle = true,
+                AlwaysRenderWorldUnit = true,
+                DrawBoundingBox = false,
                 RenderCircleThickness = 3,
                 LineThickness = 6
             },
@@ -177,7 +182,8 @@ namespace WhereAreYouGoing
                 DrawAttackEndPoint = true,
                 DrawDestinationEndPoint = true,
                 DrawLine = true,
-                AlwaysRenderCircle = true,
+                AlwaysRenderWorldUnit = true,
+                DrawBoundingBox = false,
                 RenderCircleThickness = 3,
                 LineThickness = 6
             },
@@ -206,7 +212,8 @@ namespace WhereAreYouGoing
                 DrawAttackEndPoint = true,
                 DrawDestinationEndPoint = true,
                 DrawLine = true,
-                AlwaysRenderCircle = true,
+                AlwaysRenderWorldUnit = true,
+                DrawBoundingBox = false,
                 RenderCircleThickness = 5,
                 LineThickness = 5
             },

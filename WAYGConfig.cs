@@ -84,9 +84,15 @@ namespace WhereAreYouGoing
             public bool DrawLine { get; set; } = true;
 
             /// <summary>
-            /// Gets or sets a value indicating whether to always render a circle in the world.
+            /// Gets or sets a value indicating whether to always render in the world.
             /// </summary>
-            public bool AlwaysRenderCircle { get; set; } = true;
+            public bool AlwaysRenderWorldUnit { get; set; } = true;
+
+            /// <summary>
+            /// Draws a bounding box when true.
+            /// </summary>
+            public bool DrawBoundingBox { get; set; } = false;
+
 
             /// <summary>
             /// Draws a filled circle when true.
