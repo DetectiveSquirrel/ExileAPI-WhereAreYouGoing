@@ -541,8 +541,8 @@ namespace WhereAreYouGoing
 
         static float ConvertTo360(float value)
         {
-            // Convert the value from the range of 0-6.2 to 0-360 degrees
-            return value * (360f / 6.3f);
+            // replace with New renderComp.RotationInDegrees
+            return value * (180 / MathF.PI);
         }
 
         static List<Vector3> RotatePointsAroundCenter(List<Vector3> points, Vector3 position, float angleInDegrees)
