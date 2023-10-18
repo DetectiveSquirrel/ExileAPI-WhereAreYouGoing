@@ -161,9 +161,46 @@ namespace WhereAreYouGoing
 
             var entityLists = new List<IEnumerable<Entity>>
             {
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Error] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.None] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.ServerObject] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Effect] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Light] ?? Enumerable.Empty<Entity>(),
                 GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Monster] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Chest] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.SmallChest] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Npc] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Shrine] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.AreaTransition] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Portal] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.QuestObject] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Stash] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Waypoint] ?? Enumerable.Empty<Entity>(),
                 GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Player] ?? Enumerable.Empty<Entity>(),
-                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.None] ?? Enumerable.Empty<Entity>()
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Pet] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.WorldItem] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Resource] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Breach] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.ControlObjects] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.HideoutDecoration] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.CraftUnlock] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Daemon] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.TownPortal] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Monolith] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.MiniMonolith] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.BetrayalChoice] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.IngameIcon] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.LegionMonolith] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Item] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Terrain] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.DelveCraftingBench] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.GuildStash] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.MiscellaneousObjects] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Door] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.DoorSwitch] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.ExpeditionRelic] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.ExpeditionRune] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.TriggerableBlockage] ?? Enumerable.Empty<Entity>()
             };
 
             var entityList = entityLists.SelectMany(list => list).ToList();
