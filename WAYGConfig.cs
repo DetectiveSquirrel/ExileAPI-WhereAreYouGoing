@@ -1,4 +1,5 @@
 ﻿using SharpDX;
+using static WhereAreYouGoing.WhereAreYouGoingSettings;
 
 namespace WhereAreYouGoing
 {
@@ -10,7 +11,12 @@ namespace WhereAreYouGoing
         /// <summary>
         /// Gets or sets a value indicating whether the WAYG feature is enabled.
         /// </summary>
-        public bool Enable { get; set; } = true;
+        public bool Enable { get; set; } = false;
+
+        /// <summary>
+        /// Gets or sets a value indicating whether the WAYG feature is enabled.
+        /// </summary>
+        public UnitType UnitType { get; set; } = UnitType.None;
 
         /// <summary>
         /// Gets or sets the colors used for the WAYG feature.

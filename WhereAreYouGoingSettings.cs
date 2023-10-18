@@ -6,6 +6,19 @@ namespace WhereAreYouGoing
 {
     public class WhereAreYouGoingSettings : ISettings
     {
+        public enum UnitType
+        {
+            None,
+            Normal,
+            Magic,
+            Rare,
+            Unique,
+            Self,
+            Friendly,
+            Player,
+            UnitTesting
+        }
+
         //Mandatory setting to allow enabling/disabling your plugin
         public ToggleNode Enable { get; set; } = new ToggleNode(false);
 
@@ -14,6 +27,7 @@ namespace WhereAreYouGoing
         public WAYGConfig NormalMonster { get; set; } = new WAYGConfig()
         {
             Enable = true,
+            UnitType = UnitType.Normal,
             Colors = new WAYGConfig.WAYGColors
             {
                 MapColor = new Color(255, 255, 255, 94),
@@ -45,6 +59,7 @@ namespace WhereAreYouGoing
         public WAYGConfig MagicMonster { get; set; } = new WAYGConfig()
         {
             Enable = true,
+            UnitType = UnitType.Magic,
             Colors = new WAYGConfig.WAYGColors
             {
                 MapColor = new Color(43, 120, 255, 176),
@@ -76,6 +91,7 @@ namespace WhereAreYouGoing
         public WAYGConfig RareMonster { get; set; } = new WAYGConfig()
         {
             Enable = true,
+            UnitType = UnitType.Rare,
             Colors = new WAYGConfig.WAYGColors
             {
                 MapColor = new Color(225, 210, 19, 255),
@@ -107,6 +123,39 @@ namespace WhereAreYouGoing
         public WAYGConfig UniqueMonster { get; set; } = new WAYGConfig()
         {
             Enable = true,
+            UnitType = UnitType.Unique,
+            Colors = new WAYGConfig.WAYGColors
+            {
+                MapColor = new Color(226, 122, 33, 255),
+                MapAttackColor = new Color(255, 0, 0, 255),
+                WorldColor = new Color(226, 122, 33, 255),
+                WorldAttackColor = new Color(255, 0, 0, 255),
+            },
+            World = new WAYGConfig.WAYGWorld
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawAttackEndPoint = true,
+                DrawDestinationEndPoint = true,
+                DrawLine = true,
+                AlwaysRenderWorldUnit = true,
+                DrawFilledCircle = true,
+                DrawBoundingBox = false,
+                RenderCircleThickness = 5,
+                LineThickness = 5
+            },
+            Map = new WAYGConfig.WAYGMap
+            {
+                Enable = true,
+                DrawAttack = true,
+                DrawDestination = true,
+                LineThickness = 3
+            }
+        };
+        public WAYGConfig TestingUnits { get; set; } = new WAYGConfig()
+        {
+            Enable = true,
+            UnitType = UnitType.UnitTesting,
             Colors = new WAYGConfig.WAYGColors
             {
                 MapColor = new Color(226, 122, 33, 255),
@@ -138,6 +187,7 @@ namespace WhereAreYouGoing
         public WAYGConfig Self { get; set; } = new WAYGConfig()
         {
             Enable = true,
+            UnitType = UnitType.Self,
             Colors = new WAYGConfig.WAYGColors
             {
                 MapColor = new Color(35, 194, 47, 193),
@@ -168,6 +218,7 @@ namespace WhereAreYouGoing
         public WAYGConfig Players { get; set; } = new WAYGConfig()
         {
             Enable = true,
+            UnitType = UnitType.Player,
             Colors = new WAYGConfig.WAYGColors
             {
                 MapColor = new Color(35, 194, 47, 193),
@@ -198,6 +249,7 @@ namespace WhereAreYouGoing
         public WAYGConfig Minions { get; set; } = new WAYGConfig()
         {
             Enable = true,
+            UnitType = UnitType.Friendly,
             Colors = new WAYGConfig.WAYGColors
             {
                 MapColor = new Color(218, 73, 255, 255),

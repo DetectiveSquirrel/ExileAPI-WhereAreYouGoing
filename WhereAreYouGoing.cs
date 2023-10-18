@@ -11,6 +11,7 @@ using SharpDX;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using static WhereAreYouGoing.WhereAreYouGoingSettings;
 using Map = ExileCore.PoEMemory.Elements.Map;
 using Vector2 = System.Numerics.Vector2;
 using Vector3 = System.Numerics.Vector3;
@@ -109,13 +110,14 @@ namespace WhereAreYouGoing
         {
             base.DrawSettings();
 
-            //Settings.Self = SettingMenu(Settings.Players, "Self");
             Settings.Players = SettingMenu(Settings.Players, "Players");
-            Settings.Minions = SettingMenu(Settings.Minions, "All Minion");
+            Settings.Self = SettingMenu(Settings.Self, "Self");
+            Settings.Minions = SettingMenu(Settings.Minions, "All Friendlys");
             Settings.NormalMonster = SettingMenu(Settings.NormalMonster, "Normal Monster");
             Settings.MagicMonster = SettingMenu(Settings.MagicMonster, "Magic Monster");
             Settings.RareMonster = SettingMenu(Settings.RareMonster, "Rare Monster");
             Settings.UniqueMonster = SettingMenu(Settings.UniqueMonster, "Unique Monster");
+            Settings.TestingUnits = SettingMenu(Settings.TestingUnits, "Testing Units");
         }
 
         public override Job Tick()
@@ -144,37 +146,43 @@ namespace WhereAreYouGoing
             //Any Imgui or Graphics calls go here. This is called after Tick
             if (!Settings.Enable.Value || !GameController.InGame) return;
 
-            var playerPositioned = GameController?.Player?.GetComponent<Positioned>();
+            var player = GameController?.Player;
+
+            var playerPositioned = player?.GetComponent<Positioned>();
             if (playerPositioned == null) return;
             var playerPos = playerPositioned.GridPosNum;
 
-            var playerRender = GameController?.Player?.GetComponent<Render>();
+            var playerRender = player?.GetComponent<Render>();
             if (playerRender == null) return;
             var posZ = GameController.Player.PosNum.Z;
 
             if (MapWindow == null) return;
             var mapWindowLargeMapZoom = MapWindow.LargeMapZoom;
 
-            var baseIcons = GameController?.EntityListWrapper?.OnlyValidEntities
-                .SelectWhereF(x => x.GetHudComponent<BaseIcon>(), icon => icon != null).OrderByF(x => x.Priority)
-                .ToList();
-
-            if (baseIcons == null) return;
-
-            foreach (var icon in baseIcons)
+            var entityLists = new List<IEnumerable<Entity>>
             {
-                if (icon == null) continue;
-                if (icon.Entity == null) continue;
+                GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Monster] ?? Enumerable.Empty<Entity>(),
+                GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Player] ?? Enumerable.Empty<Entity>(),
+                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.None] ?? Enumerable.Empty<Entity>()
+            };
+
+            var entityList = entityLists.SelectMany(list => list).ToList();
+
+            if (entityList == null) return;
+
+            foreach (var entity in entityList)
+            {
+                if (entity == null) continue;
 
                 var drawSettings = new WAYGConfig();
 
-                switch (icon.Entity.Type)
+                switch (entity.Type)
                 {
                     case EntityType.Monster:
-                        switch (icon.Entity.IsHostile)
+                        switch (entity.IsHostile)
                         {
                             case true:
-                                switch (icon.Rarity)
+                                switch (entity.Rarity)
                                 {
                                     case MonsterRarity.White:
                                         drawSettings = Settings.NormalMonster;
@@ -201,63 +209,91 @@ namespace WhereAreYouGoing
                         break;
 
                     case EntityType.Player:
-                        drawSettings = Settings.Players;
+                        if (entity.Address != player?.Address)
+                            drawSettings = Settings.Players;
+                        else
+                            drawSettings = Settings.Self;
+
+                        break;
+
+                    case EntityType.None:
+                        if (entity.Metadata == "Metadata/Projectiles/Fireball")
+                            drawSettings = Settings.TestingUnits;
+                        if (entity.Metadata.Contains("LightningArrow"))
+                            drawSettings = Settings.TestingUnits;
+
                         break;
                 }
 
                 if (!drawSettings.Enable) continue;
 
-                var component = icon?.Entity?.GetComponent<Render>();
+                var component = entity?.GetComponent<Render>();
                 if (component == null) continue;
 
-                var pathComp = icon.Entity?.GetComponent<Pathfinding>();
+#region UnitTesting Drawing
+                if (drawSettings.UnitType == UnitType.UnitTesting)
+                {
+                    if (drawSettings.World.AlwaysRenderWorldUnit)
+                        switch (drawSettings.World.DrawBoundingBox)
+                        {
+                            case true:
+                                DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
+                                break;
+                            case false:
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                break;
+                        }
+                }
+#endregion
+
+                var pathComp = entity?.GetComponent<Pathfinding>();
                 if (pathComp == null) continue;
 
-                var actorComp = icon.Entity?.GetComponent<Actor>();
+                var actorComp = entity?.GetComponent<Actor>();
                 if (actorComp == null) continue;
 
-                var actionFlag = actorComp.Action;
+                var shouldDrawCircle = entity.IsAlive && entity.DistancePlayer < Settings.MaxCircleDrawDistance;
 
-                var shouldDrawCircle = icon.Entity.DistancePlayer < Settings.MaxCircleDrawDistance;
+                var actionFlag = actorComp.Action;
 
                 switch (actionFlag)
                 {
                     case (ActionFlags)512:
-                    case ActionFlags.None:
+                    case var flags when (flags & ActionFlags.None) == 0:
                         if (drawSettings.World.AlwaysRenderWorldUnit)
                         {
                             if (shouldDrawCircle)
                                 switch (drawSettings.World.DrawBoundingBox)
                                 {
                                     case true:
-                                        DrawBoundingBoxInWorld(icon.Entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
                                         break;
                                     case false:
-                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                                         break;
                                 }
                         }
 
                         break;
 
-                    case ActionFlags.UsingAbility:
+                    case var flags when (flags & ActionFlags.UsingAbility) != 0:
                         var castGridDestination = actorComp.CurrentAction.Destination;
 
                         if (drawSettings.Map.Enable && drawSettings.Map.DrawAttack)
                         {
-                            var entityTerrainHeight = QueryGridPositionToWorldWithTerrainHeight(icon.Entity.GridPosNum);
+                            var entityTerrainHeight = QueryGridPositionToWorldWithTerrainHeight(entity.GridPosNum);
                             var entityCastTerrainHeight = QueryGridPositionToWorldWithTerrainHeight(castGridDestination);
 
                             Vector2 position;
                             var castPosConvert = new Vector2();
                             if (largeMap)
                             {
-                                position = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(icon.GridPositionNum() - playerPos, Diagonal, scale, (entityTerrainHeight.Z - posZ) / (9f / mapWindowLargeMapZoom));
+                                position = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(entity.GridPosNum - playerPos, Diagonal, scale, (entityTerrainHeight.Z - posZ) / (9f / mapWindowLargeMapZoom));
                                 castPosConvert = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(new Vector2(castGridDestination.X, castGridDestination.Y) - playerPos, Diagonal, scale, (entityCastTerrainHeight.Z - posZ) / (9f / mapWindowLargeMapZoom));
                             }
                             else
                             {
-                                position = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(icon.GridPositionNum() - playerPos, Diagonal, 240f, (entityTerrainHeight.Z - posZ) / 20);
+                                position = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(entity.GridPosNum - playerPos, Diagonal, 240f, (entityTerrainHeight.Z - posZ) / 20);
                                 castPosConvert = ScreenCenterCache + Helper.DeltaInWorldToMinimapDelta(new Vector2(castGridDestination.X, castGridDestination.Y) - playerPos, Diagonal, 240f, (entityCastTerrainHeight.Z - posZ) / 20);
                             }
 
@@ -270,17 +306,17 @@ namespace WhereAreYouGoing
                                 switch (drawSettings.World.DrawBoundingBox)
                                 {
                                     case true:
-                                        DrawBoundingBoxInWorld(icon.Entity.PosNum, drawSettings.Colors.WorldAttackColor, component.BoundsNum, component.RotationNum);
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldAttackColor, component.BoundsNum, component.RotationNum);
                                         break;
                                     case false:
-                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
                                         break;
                                 }
 
                             if (drawSettings.World.DrawLine)
                             {
                                 var entityScreenCastPosition = QueryWorldScreenPositionWithTerrainHeight(castGridDestination.ToVector2Num());
-                                var entityWorldPosition = QueryWorldScreenPositionWithTerrainHeight(icon.Entity.GridPosNum);
+                                var entityWorldPosition = QueryWorldScreenPositionWithTerrainHeight(entity.GridPosNum);
                                 Graphics.DrawLine(entityWorldPosition, entityScreenCastPosition, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
                             }
 
@@ -296,10 +332,10 @@ namespace WhereAreYouGoing
                                 switch (drawSettings.World.DrawBoundingBox)
                                 {
                                     case true:
-                                        DrawBoundingBoxInWorld(icon.Entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
                                         break;
                                     case false:
-                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                                         break;
                                 }
                         }
@@ -314,7 +350,7 @@ namespace WhereAreYouGoing
                     case ActionFlags.Dead:
                         break;
 
-                    case ActionFlags.Moving:
+                    case var flags when (flags & ActionFlags.Moving) != 0:
                         if (drawSettings.Map.Enable)
                         {
                             var mapPathNodes = new List<Vector2>();
@@ -364,10 +400,10 @@ namespace WhereAreYouGoing
                                 switch (drawSettings.World.DrawBoundingBox)
                                 {
                                     case true:
-                                        DrawBoundingBoxInWorld(icon.Entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
                                         break;
                                     case false:
-                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, icon.Entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                                         break;
                                 }
                         }
@@ -375,10 +411,6 @@ namespace WhereAreYouGoing
 
                     case ActionFlags.WashedUpState:
                         // Handle WashedUpState
-                        break;
-
-                    case ActionFlags.HasMines:
-                        // Handle HasMines
                         break;
                 }
             }
@@ -508,8 +540,8 @@ namespace WhereAreYouGoing
 
 
 
-            points = RotatePointsAroundCenter(points, position, ConvertTo360(meshRotation.X));
-            points2 = RotatePointsAroundCenter(points2, position, ConvertTo360(meshRotation.X));
+            points = RotatePointsAroundCenter(points, position, meshRotation.X);
+            points2 = RotatePointsAroundCenter(points2, position, meshRotation.X);
 
             var pointsOnScreen = new List<Vector2>
             {
@@ -539,21 +571,12 @@ namespace WhereAreYouGoing
 
         }
 
-        static float ConvertTo360(float value)
-        {
-            // replace with New renderComp.RotationInDegrees
-            return value * (180 / MathF.PI);
-        }
-
-        static List<Vector3> RotatePointsAroundCenter(List<Vector3> points, Vector3 position, float angleInDegrees)
+        static List<Vector3> RotatePointsAroundCenter(List<Vector3> points, Vector3 position, float angleInRadians)
         {
             var rotatedPoints = new List<Vector3>();
 
             // Find the center point
             var center = new Vector3(position.X, position.Y, position.Z);
-
-            // Convert the angle to radians
-            float angleInRadians = (float)(angleInDegrees * Math.PI / 180);
 
             // Iterate over each point
             foreach (var point in points)
