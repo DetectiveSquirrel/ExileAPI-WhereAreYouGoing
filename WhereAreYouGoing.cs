@@ -1,4 +1,5 @@
 ﻿using ExileCore;
+using ExileCore.PoEMemory;
 using ExileCore.PoEMemory.Components;
 using ExileCore.PoEMemory.MemoryObjects;
 using ExileCore.Shared.Abstract;
@@ -148,17 +149,20 @@ namespace WhereAreYouGoing
 
             var player = GameController?.Player;
 
-            var playerPositioned = player?.GetComponent<Positioned>();
+            player.TryGetComponent<Positioned>(out var playerPositioned);
             if (playerPositioned == null) return;
             var playerPos = playerPositioned.GridPosNum;
 
-            var playerRender = player?.GetComponent<Render>();
+
+            player.TryGetComponent<Render>(out var playerRender);
             if (playerRender == null) return;
+
             var posZ = GameController.Player.PosNum.Z;
 
             if (MapWindow == null) return;
             var mapWindowLargeMapZoom = MapWindow.LargeMapZoom;
 
+            // To reduce going over pointless amounts of valid entities, just enable the lists youre currently reading from.
             var entityLists = new List<IEnumerable<Entity>>
             {
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Error] ?? Enumerable.Empty<Entity>(),
@@ -170,9 +174,9 @@ namespace WhereAreYouGoing
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Chest] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.SmallChest] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Npc] ?? Enumerable.Empty<Entity>(),
-                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Shrine] ?? Enumerable.Empty<Entity>(),
-                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.AreaTransition] ?? Enumerable.Empty<Entity>(),
-                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Portal] ?? Enumerable.Empty<Entity>(),
+                GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Shrine] ?? Enumerable.Empty<Entity>(),
+                GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.AreaTransition] ?? Enumerable.Empty<Entity>(),
+                GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Portal] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.QuestObject] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Stash] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Waypoint] ?? Enumerable.Empty<Entity>(),
@@ -185,7 +189,7 @@ namespace WhereAreYouGoing
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.HideoutDecoration] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.CraftUnlock] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Daemon] ?? Enumerable.Empty<Entity>(),
-                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.TownPortal] ?? Enumerable.Empty<Entity>(),
+                GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.TownPortal] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Monolith] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.MiniMonolith] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.BetrayalChoice] ?? Enumerable.Empty<Entity>(),
@@ -196,7 +200,7 @@ namespace WhereAreYouGoing
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.DelveCraftingBench] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.GuildStash] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.MiscellaneousObjects] ?? Enumerable.Empty<Entity>(),
-                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Door] ?? Enumerable.Empty<Entity>(),
+                GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Door] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.DoorSwitch] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.ExpeditionRelic] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.ExpeditionRune] ?? Enumerable.Empty<Entity>(),
@@ -250,43 +254,46 @@ namespace WhereAreYouGoing
                             drawSettings = Settings.Players;
                         else
                             drawSettings = Settings.Self;
-
                         break;
-
                     case EntityType.None:
                         if (entity.Metadata == "Metadata/Projectiles/Fireball")
                             drawSettings = Settings.TestingUnits;
                         if (entity.Metadata.Contains("LightningArrow"))
                             drawSettings = Settings.TestingUnits;
-
                         break;
                 }
 
+                #region UnitTesting Entity Add
+                if (entity.Type != EntityType.Monster && entity.Type != EntityType.Player)
+                    drawSettings = Settings.TestingUnits;
+                #endregion
+
+
                 if (!drawSettings.Enable) continue;
 
-                var component = entity?.GetComponent<Render>();
-                if (component == null) continue;
+                entity.TryGetComponent<Render>(out var renderComp);
+                if (renderComp == null) continue;
 
-#region UnitTesting Drawing
+                #region UnitTesting Drawing
                 if (drawSettings.UnitType == UnitType.UnitTesting)
                 {
                     if (drawSettings.World.AlwaysRenderWorldUnit)
                         switch (drawSettings.World.DrawBoundingBox)
                         {
                             case true:
-                                DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
+                                DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, renderComp.BoundsNum, renderComp.RotationNum.X);
                                 break;
                             case false:
-                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, renderComp.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                                 break;
                         }
                 }
-#endregion
+                #endregion
 
-                var pathComp = entity?.GetComponent<Pathfinding>();
+                entity.TryGetComponent<Pathfinding>(out var pathComp);
                 if (pathComp == null) continue;
 
-                var actorComp = entity?.GetComponent<Actor>();
+                entity.TryGetComponent<Actor>(out var actorComp);
                 if (actorComp == null) continue;
 
                 var shouldDrawCircle = entity.IsAlive && entity.DistancePlayer < Settings.MaxCircleDrawDistance;
@@ -296,24 +303,26 @@ namespace WhereAreYouGoing
                 switch (actionFlag)
                 {
                     case (ActionFlags)512:
-                    case var flags when (flags & ActionFlags.None) == 0:
+                    case ActionFlags.None:
+                    case ActionFlags.None | ActionFlags.HasMines:
                         if (drawSettings.World.AlwaysRenderWorldUnit)
                         {
                             if (shouldDrawCircle)
                                 switch (drawSettings.World.DrawBoundingBox)
                                 {
                                     case true:
-                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, renderComp.BoundsNum, renderComp.RotationNum.X);
                                         break;
                                     case false:
-                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, renderComp.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                                         break;
                                 }
                         }
 
                         break;
 
-                    case var flags when (flags & ActionFlags.UsingAbility) != 0:
+                    case ActionFlags.UsingAbility:
+                    case ActionFlags.UsingAbility | ActionFlags.HasMines:
                         var castGridDestination = actorComp.CurrentAction.Destination;
 
                         if (drawSettings.Map.Enable && drawSettings.Map.DrawAttack)
@@ -343,24 +352,24 @@ namespace WhereAreYouGoing
                                 switch (drawSettings.World.DrawBoundingBox)
                                 {
                                     case true:
-                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldAttackColor, component.BoundsNum, component.RotationNum);
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldAttackColor, renderComp.BoundsNum, renderComp.RotationNum.X);
                                         break;
                                     case false:
-                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, renderComp.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldAttackColor);
                                         break;
                                 }
 
                             if (drawSettings.World.DrawLine)
                             {
-                                var entityScreenCastPosition = QueryWorldScreenPositionWithTerrainHeight(castGridDestination.ToVector2Num());
-                                var entityWorldPosition = QueryWorldScreenPositionWithTerrainHeight(entity.GridPosNum);
+                                var entityScreenCastPosition = GameController.IngameState.Data.GetGridScreenPosition(castGridDestination.ToVector2Num());
+                                var entityWorldPosition = GameController.IngameState.Data.GetGridScreenPosition(entity.GridPosNum);
                                 Graphics.DrawLine(entityWorldPosition, entityScreenCastPosition, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
                             }
 
                             if (drawSettings.World.DrawAttackEndPoint && shouldDrawCircle)
                             {
                                 var worldPosFromGrid = new Vector3(castGridDestination.GridToWorld().X, castGridDestination.GridToWorld().Y, 0);
-                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, new Vector3(worldPosFromGrid.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(worldPosFromGrid.WorldToGrid())), renderComp.BoundsNum.X / 3, drawSettings.World.LineThickness, drawSettings.Colors.WorldAttackColor);
                             }
                         }
                         else
@@ -369,10 +378,10 @@ namespace WhereAreYouGoing
                                 switch (drawSettings.World.DrawBoundingBox)
                                 {
                                     case true:
-                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, renderComp.BoundsNum, renderComp.RotationNum.X);
                                         break;
                                     case false:
-                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, renderComp.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                                         break;
                                 }
                         }
@@ -387,7 +396,8 @@ namespace WhereAreYouGoing
                     case ActionFlags.Dead:
                         break;
 
-                    case var flags when (flags & ActionFlags.Moving) != 0:
+                    case ActionFlags.Moving:
+                    case ActionFlags.Moving | ActionFlags.HasMines:
                         if (drawSettings.Map.Enable)
                         {
                             var mapPathNodes = new List<Vector2>();
@@ -430,17 +440,17 @@ namespace WhereAreYouGoing
                             {
                                 var pathingNodesToWorld = QueryWorldScreenPositionsWithTerrainHeight(pathingNodes);
                                 var queriedWorldPos = new Vector3(pathingNodes.Last().GridToWorld().X, pathingNodes.Last().GridToWorld().Y, 0);
-                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, new Vector3(queriedWorldPos.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(queriedWorldPos.WorldToGrid())), component.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, new Vector3(queriedWorldPos.Xy(), GameController.IngameState.Data.GetTerrainHeightAt(queriedWorldPos.WorldToGrid())), renderComp.BoundsNum.X / 3, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                             }
 
                             if (drawSettings.World.AlwaysRenderWorldUnit && shouldDrawCircle)
                                 switch (drawSettings.World.DrawBoundingBox)
                                 {
                                     case true:
-                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, component.BoundsNum, component.RotationNum);
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, renderComp.BoundsNum, renderComp.RotationNum.X);
                                         break;
                                     case false:
-                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, component.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, renderComp.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
                                         break;
                                 }
                         }
@@ -451,17 +461,6 @@ namespace WhereAreYouGoing
                         break;
                 }
             }
-        }
-
-        /// <summary>
-        /// Queries the world screen position with terrain height for the given grid position.
-        /// </summary>
-        /// <param name="gridPosition">The grid position to query.</param>
-        /// <returns>The world screen position with terrain height.</returns>
-        private Vector2 QueryWorldScreenPositionWithTerrainHeight(Vector2 gridPosition)
-        {
-            // Query the world screen position with terrain height for the given grid position
-            return Camera.WorldToScreen(QueryGridPositionToWorldWithTerrainHeight(gridPosition));
         }
 
         /// <summary>
@@ -486,176 +485,42 @@ namespace WhereAreYouGoing
             return new Vector3(gridPosition.GridToWorld(), (float)GameController.IngameState.Data.GetTerrainHeightAt(gridPosition));
         }
 
-        /// <summary>
-        /// Draws a circle at the specified world position with the given radius, thickness, and color.
-        /// </summary>
-        /// <param name="position">The world position to draw the circle at.</param>
-        /// <param name="radius">The radius of the circle.</param>
-        /// <param name="thickness">The thickness of the circle's outline.</param>
-        /// <param name="color">The color of the circle.</param>
-        private void DrawCircleInWorldPosition(Vector3 position, float radius, int thickness, Color color)
-        {
-            const int segments = 15;
-            const float segmentAngle = 2f * MathF.PI / segments;
-
-            for (var i = 0; i < segments; i++)
-            {
-                var angle = i * segmentAngle;
-                var currentOffset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
-                var nextOffset = new Vector2(MathF.Cos(angle + segmentAngle), MathF.Sin(angle + segmentAngle)) * radius;
-
-                var currentWorldPos = position + new Vector3(currentOffset, 0);
-                var nextWorldPos = position + new Vector3(nextOffset, 0);
-
-                Graphics.DrawLine(
-                    Camera.WorldToScreen(currentWorldPos),
-                    Camera.WorldToScreen(nextWorldPos),
-                    thickness,
-                    color
-                );
-            }
-        }
-
-        /// <summary>
-        /// Draws a filled circle at the specified world position with the given radius and color.
-        /// </summary>
-        /// <param name="position">The world position to draw the circle at.</param>
-        /// <param name="radius">The radius of the circle.</param>
-        /// <param name="color">The color of the circle.</param>
-        private void DrawFilledCircleInWorldPosition(Vector3 position, float radius, int thickness, Color color)
-        {
-            var circlePoints = new List<Vector2>();
-            const int segments = 15;
-            const float segmentAngle = 2f * MathF.PI / segments;
-
-            for (var i = 0; i < segments; i++)
-            {
-                var angle = i * segmentAngle;
-                var currentOffset = new Vector2(MathF.Cos(angle), MathF.Sin(angle)) * radius;
-                var nextOffset = new Vector2(MathF.Cos(angle + segmentAngle), MathF.Sin(angle + segmentAngle)) * radius;
-
-                var currentWorldPos = position + new Vector3(currentOffset, 0);
-                var nextWorldPos = position + new Vector3(nextOffset, 0);
-
-                circlePoints.Add(Camera.WorldToScreen(currentWorldPos));
-                circlePoints.Add(Camera.WorldToScreen(nextWorldPos));
-            }
-
-            Graphics.DrawConvexPolyFilled(circlePoints.ToArray(), color);
-        }
-
-        /// <summary>
-        /// Draws a circle at the specified world position with the given radius, thickness, and color.
-        /// </summary>
-        /// <param name="position">The world position to draw the circle at.</param>
-        /// <param name="radius">The radius of the circle.</param>
-        /// <param name="thickness">The thickness of the circle's outline.</param>
-        /// <param name="color">The color of the circle.</param>
-        private void DrawBoundingBoxInWorld(Vector3 position, Color color, Vector3 bounds, Vector3 meshRotation)
-        {
-
-            var _color = color;
-            //_color.A = 50;
-
-            var points = new List<Vector3>
-            {
-                new Vector3(position.X - bounds.X, position.Y - bounds.Y, position.Z), // Bottom left = Pos.X-Bounds.X/2, Pos.Y-Bounds.Y/2
-                new Vector3(position.X - bounds.X, position.Y + bounds.Y, position.Z), // Top left = Pos.X-Bounds.X/2, Pos.Y+Bounds.Y/2
-                new Vector3(position.X + bounds.X, position.Y + bounds.Y, position.Z), // Top Right = Pos.X+Bounds.X/2, Pos.Y+Bounds.Y/2
-                new Vector3(position.X + bounds.X, position.Y - bounds.Y, position.Z) // Bottom Right = Pos.X+Bounds.X/2, Pos.Y-Bounds.Y/2
-            };
-
-
-
-            var points2 = new List<Vector3>
-            {
-                new Vector3(position.X - bounds.X, position.Y - bounds.Y, position.Z-bounds.Z*2), // Bottom left = Pos.X-Bounds.X/2, Pos.Y-Bounds.Y/2
-                new Vector3(position.X - bounds.X, position.Y + bounds.Y, position.Z-bounds.Z*2), // Top left = Pos.X-Bounds.X/2, Pos.Y+Bounds.Y/2
-                new Vector3(position.X + bounds.X, position.Y + bounds.Y, position.Z-bounds.Z*2), // Top Right = Pos.X+Bounds.X/2, Pos.Y+Bounds.Y/2
-                new Vector3(position.X + bounds.X, position.Y - bounds.Y, position.Z-bounds.Z*2) // Bottom Right = Pos.X+Bounds.X/2, Pos.Y-Bounds.Y/2
-            };
-
-
-
-            points = RotatePointsAroundCenter(points, position, meshRotation.X);
-            points2 = RotatePointsAroundCenter(points2, position, meshRotation.X);
-
-            var pointsOnScreen = new List<Vector2>
-            {
-                Camera.WorldToScreen(points[0]), // Bottom left = Pos.X-Bounds.X/2, Pos.Y-Bounds.Y/2
-                Camera.WorldToScreen(points[1]), // Top left = Pos.X-Bounds.X/2, Pos.Y+Bounds.Y/2
-                Camera.WorldToScreen(points[2]), // Top Right = Pos.X+Bounds.X/2, Pos.Y+Bounds.Y/2
-                Camera.WorldToScreen(points[3]) // Bottom Right = Pos.X+Bounds.X/2, Pos.Y-Bounds.Y/2
-            };
-
-            var points2OnScreen = new List<Vector2>
-            {
-                Camera.WorldToScreen(points2[0]), // Bottom left = Pos.X-Bounds.X/2, Pos.Y-Bounds.Y/2
-                Camera.WorldToScreen(points2[1]), // Top left = Pos.X-Bounds.X/2, Pos.Y+Bounds.Y/2
-                Camera.WorldToScreen(points2[2]), // Top Right = Pos.X+Bounds.X/2, Pos.Y+Bounds.Y/2
-                Camera.WorldToScreen(points2[3]) // Bottom Right = Pos.X+Bounds.X/2, Pos.Y-Bounds.Y/2
-            };
-
-            Graphics.DrawConvexPolyFilled(pointsOnScreen.ToArray(), _color); // Bottom Bounds
-            Graphics.DrawConvexPolyFilled(points2OnScreen.ToArray(), _color); // Top Bounds
-
-            //_color.A = 100;
-
-            Graphics.DrawLine(Camera.WorldToScreen(points[0]), Camera.WorldToScreen(points2[0]), 2f, _color);
-            Graphics.DrawLine(Camera.WorldToScreen(points[1]), Camera.WorldToScreen(points2[1]), 2f, _color);
-            Graphics.DrawLine(Camera.WorldToScreen(points[2]), Camera.WorldToScreen(points2[2]), 2f, _color);
-            Graphics.DrawLine(Camera.WorldToScreen(points[3]), Camera.WorldToScreen(points2[3]), 2f, _color);
-
-        }
-
-        static List<Vector3> RotatePointsAroundCenter(List<Vector3> points, Vector3 position, float angleInRadians)
-        {
-            var rotatedPoints = new List<Vector3>();
-
-            // Find the center point
-            var center = new Vector3(position.X, position.Y, position.Z);
-
-            // Iterate over each point
-            foreach (var point in points)
-            {
-                // Translate to origin
-                var translatedPoint = point - center;
-
-                // Rotate the translated point
-                var rotatedPoint = RotatePoint(translatedPoint, angleInRadians);
-
-                // Translate back to the original position
-                var finalPoint = rotatedPoint + center;
-
-                rotatedPoints.Add(finalPoint);
-            }
-
-            return rotatedPoints;
-        }
-
-        static Vector3 RotatePoint(Vector3 point, float angle)
-        {
-            // Your rotation logic here
-            // Implement your rotation logic for a 3D point around the origin
-
-            // For example, for rotating around the Z-axis (assuming a 2D rotation), you can use:
-            float newX = (float)(point.X * Math.Cos(angle) - point.Y * Math.Sin(angle));
-            float newY = (float)(point.X * Math.Sin(angle) + point.Y * Math.Cos(angle));
-            float newZ = point.Z; // Z remains the same for a 2D rotation
-
-            return new Vector3(newX, newY, newZ);
-        }
-
         private void DrawCircleInWorldPos(bool drawFilledCircle, Vector3 position, float radius, int thickness, Color color)
         {
-            if (drawFilledCircle)
+            RectangleF screensize = GameController.Window.GetWindowRectangleReal();
+            Vector2 entityPos = RemoteMemoryObject.pTheGame.IngameState.Camera.WorldToScreen(position);
+            if (IsEntityWithinScreen(entityPos, screensize, 50))
             {
-                DrawFilledCircleInWorldPosition(position, radius, thickness, color);
+                if (drawFilledCircle)
+                {
+                    Graphics.DrawFilledCircleInWorldPosition(position, radius, color);
+                }
+                else
+                {
+                    Graphics.DrawCircleInWorldPosition(position, radius, thickness, color);
+                }
             }
-            else
+        }
+
+        private void DrawBoundingBoxInWorld(Vector3 position, Color color, Vector3 bounds, float rotationRadians)
+        {
+            RectangleF screensize = GameController.Window.GetWindowRectangleReal();
+            Vector2 entityPos = RemoteMemoryObject.pTheGame.IngameState.Camera.WorldToScreen(position);
+            if (IsEntityWithinScreen(entityPos, screensize, 50))
             {
-                DrawCircleInWorldPosition(position, radius, thickness, color);
+                Graphics.DrawBoundingBoxInWorld(position, color, bounds, rotationRadians);
             }
+        }
+        private bool IsEntityWithinScreen(Vector2 entityPos, RectangleF screensize, float allowancePX)
+        {
+            // Check if the entity position is within the screen bounds with allowance
+            float leftBound = screensize.Left - allowancePX;
+            float rightBound = screensize.Right + allowancePX;
+            float topBound = screensize.Top - allowancePX;
+            float bottomBound = screensize.Bottom + allowancePX;
+
+            return entityPos.X >= leftBound && entityPos.X <= rightBound &&
+                   entityPos.Y >= topBound && entityPos.Y <= bottomBound;
         }
     }
 }
