@@ -80,6 +80,11 @@ namespace WhereAreYouGoing
             public bool DrawAttackEndPoint { get; set; } = true;
 
             /// <summary>
+            /// Gets or sets a value indicating whether to draw the destination in the world.
+            /// </summary>
+            public bool DrawDestination { get; set; } = true;
+
+            /// <summary>
             /// Gets or sets a value indicating whether to draw the endpoint of the destination in the world.
             /// </summary>
             public bool DrawDestinationEndPoint { get; set; } = true;
