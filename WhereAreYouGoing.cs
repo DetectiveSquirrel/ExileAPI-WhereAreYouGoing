@@ -178,7 +178,7 @@ namespace WhereAreYouGoing
                 GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.AreaTransition] ?? Enumerable.Empty<Entity>(),
                 GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Portal] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.QuestObject] ?? Enumerable.Empty<Entity>(),
-                //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Stash] ?? Enumerable.Empty<Entity>(),
+                GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Stash] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Waypoint] ?? Enumerable.Empty<Entity>(),
                 GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Player] ?? Enumerable.Empty<Entity>(),
                 //GameController?.EntityListWrapper?.ValidEntitiesByType[EntityType.Pet] ?? Enumerable.Empty<Entity>(),
@@ -493,11 +493,11 @@ namespace WhereAreYouGoing
             {
                 if (drawFilledCircle)
                 {
-                    Graphics.DrawFilledCircleInWorldPosition(position, radius, color);
+                    Graphics.DrawFilledCircleInWorld(position, radius, color);
                 }
                 else
                 {
-                    Graphics.DrawCircleInWorldPosition(position, radius, thickness, color);
+                    Graphics.DrawCircleInWorld(position, radius, color, thickness);
                 }
             }
         }
