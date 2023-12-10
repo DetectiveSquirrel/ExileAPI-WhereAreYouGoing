@@ -323,6 +323,7 @@ namespace WhereAreYouGoing
                         break;
 
                     case ActionFlags.UsingAbility:
+                    case ActionFlags.UsingAbilityAbilityCooldown:
                     case ActionFlags.UsingAbility | ActionFlags.HasMines:
                         var castGridDestination = actorComp.CurrentAction.Destination;
 
@@ -389,9 +390,6 @@ namespace WhereAreYouGoing
                         break;
 
                     case ActionFlags.AbilityCooldownActive:
-                        break;
-
-                    case ActionFlags.UsingAbilityAbilityCooldown:
                         break;
 
                     case ActionFlags.Dead:
