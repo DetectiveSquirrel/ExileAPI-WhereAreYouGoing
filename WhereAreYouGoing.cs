@@ -486,7 +486,14 @@ namespace WhereAreYouGoing
 
         private void DrawCircleInWorldPos(bool drawFilledCircle, Vector3 position, float radius, int thickness, Color color)
         {
-            RectangleF screensize = GameController.Window.GetWindowRectangleReal();
+            RectangleF screensize = new RectangleF()
+            {
+                X = 0,
+                Y = 0,
+                Width = GameController.Window.GetWindowRectangleTimeCache.Size.Width,
+                Height = GameController.Window.GetWindowRectangleTimeCache.Size.Height
+            };
+
             Vector2 entityPos = RemoteMemoryObject.pTheGame.IngameState.Camera.WorldToScreen(position);
             if (IsEntityWithinScreen(entityPos, screensize, 50))
             {
@@ -503,7 +510,14 @@ namespace WhereAreYouGoing
 
         private void DrawBoundingBoxInWorld(Vector3 position, Color color, Vector3 bounds, float rotationRadians)
         {
-            RectangleF screensize = GameController.Window.GetWindowRectangleReal();
+            RectangleF screensize = new RectangleF()
+            {
+                X = 0,
+                Y = 0,
+                Width = GameController.Window.GetWindowRectangleTimeCache.Size.Width,
+                Height = GameController.Window.GetWindowRectangleTimeCache.Size.Height
+            };
+
             Vector2 entityPos = RemoteMemoryObject.pTheGame.IngameState.Camera.WorldToScreen(position);
             if (IsEntityWithinScreen(entityPos, screensize, 50))
             {
