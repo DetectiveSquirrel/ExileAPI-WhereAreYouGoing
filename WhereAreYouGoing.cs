@@ -395,8 +395,8 @@ namespace WhereAreYouGoing
                     case ActionFlags.Dead:
                         break;
 
-                    case ActionFlags.Moving:
-                    case ActionFlags.Moving | ActionFlags.HasMines:
+                    case (ActionFlags)4224:
+                    case ActionFlags.Moving | ActionFlags.HasMines | (ActionFlags)4224:
                         if (drawSettings.Map.Enable)
                         {
                             var mapPathNodes = new List<Vector2>();
@@ -457,6 +457,23 @@ namespace WhereAreYouGoing
 
                     case ActionFlags.WashedUpState:
                         // Handle WashedUpState
+                        break;
+                    default:
+                        if (drawSettings.World.AlwaysRenderWorldUnit)
+                        {
+                            if (shouldDrawCircle)
+                                switch (drawSettings.World.DrawBoundingBox)
+                                {
+                                    case true:
+                                        DrawBoundingBoxInWorld(entity.PosNum, drawSettings.Colors.WorldColor, renderComp.BoundsNum, renderComp.RotationNum.X);
+                                        break;
+                                    case false:
+                                        DrawCircleInWorldPos(drawSettings.World.DrawFilledCircle, entity.PosNum, renderComp.BoundsNum.X, drawSettings.World.RenderCircleThickness, drawSettings.Colors.WorldColor);
+                                        break;
+                                }
+                        }
+
+                        //LogMessage($"New Action State: {actionFlag}");
                         break;
                 }
             }
